@@ -15,7 +15,7 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
    ```
 4. Finally, register the library with your Umi instance.
    ```ts
-   import { createUmi } from '@metaplex-foundation/umi';
+   import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
    import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
    
    const umi = createUmi('<your rpc endpoint>');
@@ -60,4 +60,4 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
 
 ## Contributing
 
-Check out the [Contributing Guide](./CONTRIBUTING.md) the learn more about how to contribute to this library.
+Check out the [Contributing Guide](./CONTRIBUTING.md) to learn more about how to contribute to this library.

@@ -1,0 +1,11 @@
+# This file is used by the dorny/paths-filter action to figure out if a
+# client has changed and thus if it should be built or tested. Any changes in the
+# files listed below will trigger the appropriate workflow for that client.
+
+# Clients.
+js_client: &js_client
+  - ".github/workflows/main.yml"
+  - ".github/test-js-client.yml"
+  - ".github/file-filters.yml"
+  - ".github/.env"
+  - "/**"

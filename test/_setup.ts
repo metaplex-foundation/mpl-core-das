@@ -24,10 +24,10 @@ import {
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
 
+export const DAS_API_ENDPOINT = process.env.DAS_API_ENDPOINT!;
+
 export const createUmiWithDas = (endpoint: string) =>
   createUmi().use(testPlugins(endpoint)).use(dasApi());
-
-export const DAS_API_ENDPOINT = process.env.DAS_API_ENDPOINT!;
 
 export const ASSET_COMMON_DATA = {
   name: 'DAS Test Asset',

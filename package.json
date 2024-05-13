@@ -25,7 +25,7 @@
   },
   "peerDependencies": {
     "@metaplex-foundation/digital-asset-standard-api": "^1.0.3",
-    "@metaplex-foundation/mpl-core": "^0.4.3",
+    "@metaplex-foundation/mpl-core": "^0.4.7",
     "@metaplex-foundation/umi": ">=0.8.2 < 1"
   },
   "devDependencies": {

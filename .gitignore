@@ -4,6 +4,7 @@ dist
 
 # Env
 .env
+!.github/.env
 
 # Editors
 .idea

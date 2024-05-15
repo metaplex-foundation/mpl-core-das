@@ -9,17 +9,17 @@ import {
   Signer,
 } from '@metaplex-foundation/umi';
 import {
-  pluginAuthorityPair,
   AssetV1,
-  ruleSet,
   CollectionV1,
-  createV1,
   fetchAssetV1,
   DataState,
-  PluginAuthorityPairArgs,
   fetchCollectionV1,
-  createCollectionV1,
-  pluginAuthorityToBase,
+  create,
+  createCollection as baseCreateCollection,
+  ExternalPluginAdapterInitInfoArgs,
+  AssetPluginAuthorityPairArgsV2,
+  CollectionPluginAuthorityPairArgsV2,
+  AuthorityManagedPluginArgsV2,
 } from '@metaplex-foundation/mpl-core';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
@@ -28,6 +28,22 @@ export const DAS_API_ENDPOINT = process.env.DAS_API_ENDPOINT!;
 
 export const createUmiWithDas = (endpoint: string) =>
   createUmi().use(testPlugins(endpoint)).use(dasApi());
+
+export const prepareAssetForComparison = (
+  asset: AssetV1 | CollectionV1,
+  removePluginHeader = true
+) => {
+  // Needed for passing tests with different RPC providers.
+  // Most providers do not return rentEpoch and set lamports basis points to -1n
+  asset.header.lamports.basisPoints = -1n;
+  delete asset.header.rentEpoch;
+
+  if (removePluginHeader) {
+    // Remove plugin header for tests
+    // TODO: Reconstruct plugin header when converting data from DAS
+    delete asset.pluginHeader;
+  }
+};
 
 export const ASSET_COMMON_DATA = {
   name: 'DAS Test Asset',
@@ -48,9 +64,11 @@ type CreateAssetHelperArgs = {
   uri?: string;
   authority?: Signer;
   updateAuthority?: PublicKey | Signer;
-  collection?: PublicKey;
-  // TODO use PluginList type here
-  plugins?: PluginAuthorityPairArgs[];
+  collection?: PublicKey | CollectionV1;
+  plugins?: (
+    | ExternalPluginAdapterInitInfoArgs
+    | AssetPluginAuthorityPairArgsV2
+  )[];
 };
 
 const createAsset = async (umi: Umi, input: CreateAssetHelperArgs = {}) => {
@@ -58,8 +76,13 @@ const createAsset = async (umi: Umi, input: CreateAssetHelperArgs = {}) => {
   const owner = publicKey(input.owner || input.payer || umi.identity);
   const asset = input.asset || generateSigner(umi);
   const updateAuthority = publicKey(input.updateAuthority || payer);
-  // const tx =
-  await createV1(umi, {
+
+  const collection =
+    typeof input.collection === 'string'
+      ? await fetchCollectionV1(umi, input.collection as PublicKey)
+      : (input.collection as CollectionV1 | undefined);
+
+  await create(umi, {
     owner,
     payer,
     dataState: input.dataState,
@@ -68,7 +91,7 @@ const createAsset = async (umi: Umi, input: CreateAssetHelperArgs = {}) => {
     name: input.name || ASSET_COMMON_DATA.name,
     uri: input.uri || ASSET_COMMON_DATA.uri,
     plugins: input.plugins,
-    collection: input.collection,
+    collection,
     authority: input.authority,
   }).sendAndConfirm(umi);
 
@@ -81,8 +104,10 @@ type CreateCollectionHelperArgs = {
   name?: string;
   uri?: string;
   updateAuthority?: PublicKey | Signer;
-  // TODO use CollectionPluginList type here
-  plugins?: PluginAuthorityPairArgs[];
+  plugins?: (
+    | ExternalPluginAdapterInitInfoArgs
+    | CollectionPluginAuthorityPairArgsV2
+  )[];
 };
 
 const createCollection = async (
@@ -92,7 +117,8 @@ const createCollection = async (
   const payer = input.payer || umi.identity;
   const collection = input.collection || generateSigner(umi);
   const updateAuthority = publicKey(input.updateAuthority || payer);
-  await createCollectionV1(umi, {
+
+  await baseCreateCollection(umi, {
     name: input.name || COLLECTION_COMMON_DATA.name,
     uri: input.uri || COLLECTION_COMMON_DATA.uri,
     collection,
@@ -104,28 +130,26 @@ const createCollection = async (
   return fetchCollectionV1(umi, publicKey(collection));
 };
 
-function getPluginsForCreation(payer: PublicKey) {
+function getPluginsForCreation(
+  payer: PublicKey
+): AuthorityManagedPluginArgsV2[] {
   return [
-    pluginAuthorityPair({
+    {
       type: 'UpdateDelegate',
-    }),
-    pluginAuthorityPair({
+      additionalDelegates: [],
+    },
+    {
       type: 'Attributes',
-      data: { attributeList: [{ key: 'some key', value: 'some value' }] },
-    }),
-    pluginAuthorityPair({
+      attributeList: [{ key: 'some key', value: 'some value' }],
+    },
+    {
       type: 'Royalties',
-      data: {
-        basisPoints: 5,
-        creators: [
-          {
-            address: payer,
-            percentage: 100,
-          },
-        ],
-        ruleSet: ruleSet('None'),
+      basisPoints: 500,
+      creators: [{ address: payer, percentage: 100 }],
+      ruleSet: {
+        type: 'None',
       },
-    }),
+    },
   ];
 }
 
@@ -164,17 +188,15 @@ export async function createDasTestAssetOrCollection({
       payer,
       plugins: [
         ...getPluginsForCreation(payer.publicKey),
-        pluginAuthorityPair({
+        {
           type: 'MasterEdition',
-          data: {
-            maxSupply: 100,
-            name: 'Test Master Edition Name',
-            uri: 'https://example.com/das-collection-master-edition',
-          },
-          authority: pluginAuthorityToBase({
+          maxSupply: 100,
+          name: 'Test Master Edition Name',
+          uri: 'https://example.com/das-collection-master-edition',
+          authority: {
             type: 'UpdateAuthority',
-          }),
-        }),
+          },
+        },
       ],
     });
   } else {
@@ -186,27 +208,27 @@ export async function createDasTestAssetOrCollection({
       collection,
       plugins: [
         ...getPluginsForCreation(payer.publicKey),
-        pluginAuthorityPair({
-          authority: pluginAuthorityToBase({
+        {
+          type: 'TransferDelegate',
+          authority: {
             type: 'Address',
             address: transferDelegateAuthority.publicKey,
-          }),
-          type: 'TransferDelegate',
-        }),
-        pluginAuthorityPair({
+          },
+        },
+        {
           type: 'BurnDelegate',
-          authority: pluginAuthorityToBase({
+          authority: {
             type: 'UpdateAuthority',
-          }),
-        }),
-        pluginAuthorityPair({
+          },
+        },
+        {
           type: 'FreezeDelegate',
-          data: { frozen: false },
-        }),
-        pluginAuthorityPair({
+          frozen: false,
+        },
+        {
           type: 'Edition',
-          data: { number: 2 },
-        }),
+          number: 2,
+        },
       ],
     });
   }

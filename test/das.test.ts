@@ -1,7 +1,11 @@
 import test from 'ava';
 import { publicKey } from '@metaplex-foundation/umi';
 import { das } from '../src';
-import { createUmiWithDas, DAS_API_ENDPOINT } from './_setup';
+import {
+  createUmiWithDas,
+  DAS_API_ENDPOINT,
+  prepareAssetForComparison,
+} from './_setup';
 import {
   dasTestAsset1Owner,
   dasTestAsset1,
@@ -17,7 +21,12 @@ import {
   dasTestAssetInCollectionPubKey,
   dasTestCollection2PubKey,
 } from './_expectedData';
-import { fetchAssetV1, fetchCollectionV1 } from '@metaplex-foundation/mpl-core';
+import {
+  AssetV1,
+  CollectionV1,
+  fetchAssetV1,
+  fetchCollectionV1,
+} from '@metaplex-foundation/mpl-core';
 
 test('das: it can search assets', async (t) => {
   // Given an Umi instance with DAS API
@@ -128,19 +137,21 @@ test('das: it can fetch collections by update authority if update authority is n
 test('das: it can convert a DAS asset with the edition plugin to the MPL Core asset structure', async (t) => {
   // Given an Umi instance with DAS API and an asset with the edition plugin
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
-  const assetPb = publicKey('94tbAopaajgjRndvvK31TBqNTkNbJdzifwW4ec7iqpYh');
+  const assetPubKey = publicKey('94tbAopaajgjRndvvK31TBqNTkNbJdzifwW4ec7iqpYh');
 
   // Then the asset data parsed from DAS
   const assets = await das.fetchAssetsByOwner(umi, {
     owner: publicKey('EBgC18R6zKNic1CLYKYEy3SMSz4zweymeqrMHkXeqpag'),
   });
-  const assetDas = assets.find((a) => a.publicKey === assetPb) ?? {};
+  const assetDas = assets.find((a) => a.publicKey === assetPubKey) ?? {};
+  prepareAssetForComparison(assetDas as AssetV1, false);
 
   // Then the asset data fetched via fetchAssetV1
-  const assetMplCore = await fetchAssetV1(umi, assetPb);
+  const assetMplCore = await fetchAssetV1(umi, assetPubKey);
+  prepareAssetForComparison(assetMplCore);
 
   // Assets data structure is the same from both sources
-  t.like(assetMplCore, assetDas);
+  t.like(assetDas, assetMplCore);
 });
 
 test('das: it can convert a DAS collection with the master edition plugin to the MPL Core collection structure', async (t) => {
@@ -156,10 +167,17 @@ test('das: it can convert a DAS collection with the master edition plugin to the
   });
   const collectionDas =
     collections.find((a) => a.publicKey === collectionPubKey) ?? {};
+  prepareAssetForComparison(collectionDas as CollectionV1, false);
 
   // Then the collection data fetched via fetchCollectionV1
   const collectionMplCore = await fetchCollectionV1(umi, collectionPubKey);
+  prepareAssetForComparison(collectionMplCore);
 
   // Collections data structure is the same from both sources
-  t.like(collectionMplCore, collectionDas);
+  t.like(collectionDas, collectionMplCore);
 });
+
+// TODO
+test.skip('das: oracle', async (t) => {});
+test.skip('das: lifecycle hooks', async (t) => {});
+test.skip('das: data store', async (t) => {});

@@ -17,6 +17,7 @@ import {
   dasTestAssetInCollectionPubKey,
   dasTestCollection2PubKey,
 } from './_expectedData';
+import { fetchAssetV1, fetchCollectionV1 } from '@metaplex-foundation/mpl-core';
 
 test('das: it can search assets', async (t) => {
   // Given an Umi instance with DAS API
@@ -122,4 +123,43 @@ test('das: it can fetch collections by update authority if update authority is n
     (a) => a.publicKey === dasTestCollection2PubKey
   );
   t.like(collection, dasTestCollection2);
+});
+
+test('das: it can convert a DAS asset with the edition plugin to the MPL Core asset structure', async (t) => {
+  // Given an Umi instance with DAS API and an asset with the edition plugin
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+  const assetPb = publicKey('94tbAopaajgjRndvvK31TBqNTkNbJdzifwW4ec7iqpYh');
+
+  // Then the asset data parsed from DAS
+  const assets = await das.fetchAssetsByOwner(umi, {
+    owner: publicKey('EBgC18R6zKNic1CLYKYEy3SMSz4zweymeqrMHkXeqpag'),
+  });
+  const assetDas = assets.find((a) => a.publicKey === assetPb) ?? {};
+
+  // Then the asset data fetched via fetchAssetV1
+  const assetMplCore = await fetchAssetV1(umi, assetPb);
+
+  // Assets data structure is the same from both sources
+  t.like(assetMplCore, assetDas);
+});
+
+test('das: it can convert a DAS collection with the master edition plugin to the MPL Core collection structure', async (t) => {
+  // Given an Umi instance with DAS API and a collection with the master edition plugin
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+  const collectionPubKey = publicKey(
+    'D6kHt7XgMLtqBWSSf7QNc6YijQn8vqBwHb2ZF3GHnv7P'
+  );
+
+  // Then the collection data parsed from DAS
+  const collections = await das.fetchCollectionsByUpdateAuthority(umi, {
+    updateAuthority: publicKey('EBgC18R6zKNic1CLYKYEy3SMSz4zweymeqrMHkXeqpag'),
+  });
+  const collectionDas =
+    collections.find((a) => a.publicKey === collectionPubKey) ?? {};
+
+  // Then the collection data fetched via fetchCollectionV1
+  const collectionMplCore = await fetchCollectionV1(umi, collectionPubKey);
+
+  // Collections data structure is the same from both sources
+  t.like(collectionMplCore, collectionDas);
 });

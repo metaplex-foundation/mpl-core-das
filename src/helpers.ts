@@ -5,15 +5,19 @@ import {
   DasApiAssetInterface,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
+  AddBlocker,
   AssetV1,
   Attributes,
   BaseUpdateAuthority,
   BurnDelegate,
   CollectionV1,
+  Edition,
   FreezeDelegate,
   getPluginSerializer,
+  ImmutableMetadata,
   Key,
   mapPlugin,
+  MasterEdition,
   MPL_CORE_PROGRAM_ID,
   PermanentBurnDelegate,
   PermanentFreezeDelegate,
@@ -123,7 +127,12 @@ function dasPluginDataToCorePluginData(
   | PermanentFreezeDelegate
   | Attributes
   | PermanentTransferDelegate
-  | PermanentBurnDelegate {
+  | PermanentBurnDelegate
+  | Edition
+  | MasterEdition
+  | AddBlocker
+  | ImmutableMetadata {
+  // TODO: Refactor when DAS types are defined
   return (({
     basis_points,
     creators,
@@ -131,6 +140,10 @@ function dasPluginDataToCorePluginData(
     attribute_list,
     frozen,
     additional_delegates,
+    number,
+    max_supply,
+    name,
+    uri,
   }) => ({
     ...(basis_points !== undefined ? { basisPoints: basis_points } : {}),
     ...(creators !== undefined
@@ -147,6 +160,10 @@ function dasPluginDataToCorePluginData(
     ...(additional_delegates !== undefined
       ? { additionalDelegates: additional_delegates }
       : {}),
+    ...(number !== undefined ? { number } : {}),
+    ...(max_supply !== undefined ? { maxSupply: max_supply } : {}),
+    ...(name !== undefined ? { name } : {}),
+    ...(uri !== undefined ? { uri } : {}),
   }))(dasPluginData);
 }
 

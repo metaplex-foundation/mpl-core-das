@@ -20,6 +20,7 @@ import {
   PluginAuthorityPairArgs,
   fetchCollectionV1,
   createCollectionV1,
+  updatePluginAuthority,
 } from '@metaplex-foundation/mpl-core';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
@@ -104,24 +105,10 @@ const createCollection = async (
   return fetchCollectionV1(umi, publicKey(collection));
 };
 
-function getPluginsForCreation(
-  transferDelegateAuthority: PublicKey,
-  payer: PublicKey
-) {
+function getPluginsForCreation(payer: PublicKey) {
   return [
     pluginAuthorityPair({
-      authority: addressPluginAuthority(transferDelegateAuthority),
-      type: 'TransferDelegate',
-    }),
-    pluginAuthorityPair({
-      type: 'BurnDelegate',
-    }),
-    pluginAuthorityPair({
       type: 'UpdateDelegate',
-    }),
-    pluginAuthorityPair({
-      type: 'FreezeDelegate',
-      data: { frozen: false },
     }),
     pluginAuthorityPair({
       type: 'Attributes',
@@ -176,10 +163,18 @@ export async function createDasTestAssetOrCollection({
       updateAuthority,
       collection: assetAddress,
       payer,
-      plugins: getPluginsForCreation(
-        transferDelegateAuthority.publicKey,
-        payer.publicKey
-      ),
+      plugins: [
+        ...getPluginsForCreation(payer.publicKey),
+        pluginAuthorityPair({
+          type: 'MasterEdition',
+          data: {
+            maxSupply: 100,
+            name: 'Test Master Edition Name',
+            uri: 'https://example.com/das-collection-master-edition',
+          },
+          authority: updatePluginAuthority(),
+        }),
+      ],
     });
   } else {
     asset = await createAsset(umi, {
@@ -188,10 +183,27 @@ export async function createDasTestAssetOrCollection({
       asset: assetAddress,
       payer,
       collection,
-      plugins: getPluginsForCreation(
-        transferDelegateAuthority.publicKey,
-        payer.publicKey
-      ),
+      plugins: [
+        ...getPluginsForCreation(payer.publicKey),
+        pluginAuthorityPair({
+          authority: addressPluginAuthority(
+            transferDelegateAuthority.publicKey
+          ),
+          type: 'TransferDelegate',
+        }),
+        pluginAuthorityPair({
+          type: 'BurnDelegate',
+          authority: updatePluginAuthority(),
+        }),
+        pluginAuthorityPair({
+          type: 'FreezeDelegate',
+          data: { frozen: false },
+        }),
+        pluginAuthorityPair({
+          type: 'Edition',
+          data: { number: 2 },
+        }),
+      ],
     });
   }
 

@@ -190,6 +190,7 @@ export const dasTestCollection1: CollectionV1WithNoBasisPoints = {
     // exists: true,
   },
   // pluginHeader: { key: 3, pluginRegistryOffset: 182n },
+  // @ts-ignore
   transferDelegate: {
     authority: {
       type: 'Address',
@@ -253,6 +254,7 @@ export const dasTestCollection2: CollectionV1WithNoBasisPoints = {
     // exists: true,
   },
   // pluginHeader: { key: 3, pluginRegistryOffset: 182n },
+  // @ts-ignore
   transferDelegate: {
     authority: {
       type: 'Address',

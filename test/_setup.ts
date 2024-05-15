@@ -12,7 +12,6 @@ import {
   pluginAuthorityPair,
   AssetV1,
   ruleSet,
-  addressPluginAuthority,
   CollectionV1,
   createV1,
   fetchAssetV1,
@@ -20,7 +19,7 @@ import {
   PluginAuthorityPairArgs,
   fetchCollectionV1,
   createCollectionV1,
-  updatePluginAuthority,
+  pluginAuthorityToBase,
 } from '@metaplex-foundation/mpl-core';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { testPlugins } from '@metaplex-foundation/umi-bundle-tests';
@@ -172,7 +171,9 @@ export async function createDasTestAssetOrCollection({
             name: 'Test Master Edition Name',
             uri: 'https://example.com/das-collection-master-edition',
           },
-          authority: updatePluginAuthority(),
+          authority: pluginAuthorityToBase({
+            type: 'UpdateAuthority',
+          }),
         }),
       ],
     });
@@ -186,14 +187,17 @@ export async function createDasTestAssetOrCollection({
       plugins: [
         ...getPluginsForCreation(payer.publicKey),
         pluginAuthorityPair({
-          authority: addressPluginAuthority(
-            transferDelegateAuthority.publicKey
-          ),
+          authority: pluginAuthorityToBase({
+            type: 'Address',
+            address: transferDelegateAuthority.publicKey,
+          }),
           type: 'TransferDelegate',
         }),
         pluginAuthorityPair({
           type: 'BurnDelegate',
-          authority: updatePluginAuthority(),
+          authority: pluginAuthorityToBase({
+            type: 'UpdateAuthority',
+          }),
         }),
         pluginAuthorityPair({
           type: 'FreezeDelegate',

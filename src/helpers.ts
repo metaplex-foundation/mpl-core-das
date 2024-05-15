@@ -8,7 +8,7 @@ import {
   AddBlocker,
   AssetV1,
   Attributes,
-  BaseUpdateAuthority,
+  UpdateAuthority,
   BurnDelegate,
   CollectionV1,
   Edition,
@@ -17,7 +17,7 @@ import {
   ImmutableMetadata,
   Key,
   mapPlugin,
-  MasterEdition,
+  BaseMasterEdition,
   MPL_CORE_PROGRAM_ID,
   PermanentBurnDelegate,
   PermanentFreezeDelegate,
@@ -60,8 +60,8 @@ function base64ToUInt8Array(base64: string) {
 function getUpdateAuthority(
   groupingItem: DasApiAssetGrouping | undefined,
   authority: DasApiAssetAuthority
-): Record<'updateAuthority', BaseUpdateAuthority> {
-  const result: { updateAuthority: BaseUpdateAuthority } = {
+): Record<'updateAuthority', UpdateAuthority> {
+  const result: { updateAuthority: UpdateAuthority } = {
     updateAuthority: { type: 'None' },
   };
 
@@ -129,7 +129,7 @@ function dasPluginDataToCorePluginData(
   | PermanentTransferDelegate
   | PermanentBurnDelegate
   | Edition
-  | MasterEdition
+  | BaseMasterEdition
   | AddBlocker
   | ImmutableMetadata {
   // TODO: Refactor when DAS types are defined

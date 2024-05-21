@@ -190,26 +190,31 @@ export const dasTestCollection1: CollectionV1WithNoBasisPoints = {
     // exists: true,
   },
   // pluginHeader: { key: 3, pluginRegistryOffset: 182n },
-  transferDelegate: {
-    authority: {
-      type: 'Address',
-      address: publicKey('A8SQ9q2aRg2SAxJtBQxj8XwWMU74H1R7DYVCyNeYnQFx'),
-    },
-    offset: 101n,
-  },
-  burnDelegate: {
-    authority: { type: 'Owner', address: undefined },
-    offset: 102n,
-  },
+
+  // This collection was created before owner managed plugins were forbidden to use with collections.
+  // But these plugins are actually present in the collection data
+
+  // transferDelegate: {
+  //   authority: {
+  //     type: 'Address',
+  //     address: publicKey('A8SQ9q2aRg2SAxJtBQxj8XwWMU74H1R7DYVCyNeYnQFx'),
+  //   },
+  //   offset: 101n,
+  // },
+  // burnDelegate: {
+  //   authority: { type: 'Owner', address: undefined },
+  //   offset: 102n,
+  // },
+  // freezeDelegate: {
+  //   authority: { type: 'Owner', address: undefined },
+  //   offset: 108n,
+  //   frozen: false,
+  // },
+
   updateDelegate: {
     authority: { type: 'UpdateAuthority', address: undefined },
     offset: 103n,
     additionalDelegates: [],
-  },
-  freezeDelegate: {
-    authority: { type: 'Owner', address: undefined },
-    offset: 108n,
-    frozen: false,
   },
   attributes: {
     authority: { type: 'UpdateAuthority', address: undefined },
@@ -253,26 +258,31 @@ export const dasTestCollection2: CollectionV1WithNoBasisPoints = {
     // exists: true,
   },
   // pluginHeader: { key: 3, pluginRegistryOffset: 182n },
-  transferDelegate: {
-    authority: {
-      type: 'Address',
-      address: publicKey('G8xVUAnuYbMFq8pxtWFhUvHC8TVoAkqpWgahizugWFfF'),
-    },
-    offset: 101n,
-  },
-  burnDelegate: {
-    authority: { type: 'Owner', address: undefined },
-    offset: 102n,
-  },
+
+  // This collection was created before owner managed plugins were forbidden to use with collections.
+  // But these plugins are actually present in the collection data
+
+  // transferDelegate: {
+  //   authority: {
+  //     type: 'Address',
+  //     address: publicKey('G8xVUAnuYbMFq8pxtWFhUvHC8TVoAkqpWgahizugWFfF'),
+  //   },
+  //   offset: 101n,
+  // },
+  // burnDelegate: {
+  //   authority: { type: 'Owner', address: undefined },
+  //   offset: 102n,
+  // },
+  // freezeDelegate: {
+  //   authority: { type: 'Owner', address: undefined },
+  //   offset: 108n,
+  //   frozen: false,
+  // },
+
   updateDelegate: {
     authority: { type: 'UpdateAuthority', address: undefined },
     offset: 103n,
     additionalDelegates: [],
-  },
-  freezeDelegate: {
-    authority: { type: 'Owner', address: undefined },
-    offset: 108n,
-    frozen: false,
   },
   attributes: {
     authority: { type: 'UpdateAuthority', address: undefined },

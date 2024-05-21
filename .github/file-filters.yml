@@ -8,4 +8,4 @@ js_client: &js_client
   - ".github/test-js-client.yml"
   - ".github/file-filters.yml"
   - ".github/.env"
-  - "**/"
+  - "/**"

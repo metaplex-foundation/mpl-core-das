@@ -8,7 +8,7 @@ import {
   AddBlocker,
   AssetV1,
   Attributes,
-  BaseUpdateAuthority,
+  UpdateAuthority,
   BurnDelegate,
   CollectionV1,
   Edition,
@@ -17,7 +17,7 @@ import {
   ImmutableMetadata,
   Key,
   mapPlugin,
-  MasterEdition,
+  BaseMasterEdition,
   MPL_CORE_PROGRAM_ID,
   PermanentBurnDelegate,
   PermanentFreezeDelegate,
@@ -60,8 +60,8 @@ function base64ToUInt8Array(base64: string) {
 function getUpdateAuthority(
   groupingItem: DasApiAssetGrouping | undefined,
   authority: DasApiAssetAuthority
-): Record<'updateAuthority', BaseUpdateAuthority> {
-  const result: { updateAuthority: BaseUpdateAuthority } = {
+): Record<'updateAuthority', UpdateAuthority> {
+  const result: { updateAuthority: UpdateAuthority } = {
     updateAuthority: { type: 'None' },
   };
 
@@ -84,13 +84,14 @@ function getAccountHeader(
   executable?: boolean,
   lamps?: BigIntInput,
   rentEpoch?: number
-): Record<'header', AccountHeader> {
+): Record<'header', AccountHeader & { exists: boolean }> {
   return {
     header: {
       executable: executable ?? false,
       owner: MPL_CORE_PROGRAM_ID,
       lamports: lamports(lamps ?? -1),
       ...(rentEpoch !== undefined ? { rentEpoch: BigInt(rentEpoch) } : {}),
+      exists: true,
     },
   };
 }
@@ -105,15 +106,27 @@ function getRuleSet(dasRuleSet: string | Record<string, any>): RuleSet {
         )
       : [];
 
+  // RuleSet has both __kind and type for backwards compatibility
   if (ruleSetKind === 'program_allow_list') {
-    return ruleSet('ProgramAllowList', [ruleSetData]);
+    return {
+      ...ruleSet('ProgramAllowList', [ruleSetData]),
+      type: 'ProgramAllowList',
+      addresses: ruleSetData,
+    };
   }
 
   if (ruleSetKind === 'program_deny_list') {
-    return ruleSet('ProgramDenyList', [ruleSetData]);
+    return {
+      ...ruleSet('ProgramDenyList', [ruleSetData]),
+      type: 'ProgramDenyList',
+      addresses: ruleSetData,
+    };
   }
 
-  return ruleSet('None');
+  return {
+    ...ruleSet('None'),
+    type: 'None',
+  };
 }
 
 function dasPluginDataToCorePluginData(
@@ -129,7 +142,7 @@ function dasPluginDataToCorePluginData(
   | PermanentTransferDelegate
   | PermanentBurnDelegate
   | Edition
-  | MasterEdition
+  | BaseMasterEdition
   | AddBlocker
   | ImmutableMetadata {
   // TODO: Refactor when DAS types are defined

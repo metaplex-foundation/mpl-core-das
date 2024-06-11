@@ -4,3 +4,7 @@ export type Pagination = Pick<
   SearchAssetsRpcInput,
   'sortBy' | 'limit' | 'page' | 'before' | 'after'
 >;
+
+export type AssetOptions = {
+  skipDerivePlugins?: boolean;
+}

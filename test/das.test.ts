@@ -1,5 +1,12 @@
 import test from 'ava';
-import { publicKey } from '@metaplex-foundation/umi';
+import {  publicKey } from '@metaplex-foundation/umi';
+import {
+  AssetV1,
+  CollectionV1,
+  fetchAsset,
+  fetchAssetV1,
+  fetchCollectionV1,
+} from '@metaplex-foundation/mpl-core';
 import { das } from '../src';
 import {
   createUmiWithDas,
@@ -21,12 +28,6 @@ import {
   dasTestAssetInCollectionPubKey,
   dasTestCollection2PubKey,
 } from './_expectedData';
-import {
-  AssetV1,
-  CollectionV1,
-  fetchAssetV1,
-  fetchCollectionV1,
-} from '@metaplex-foundation/mpl-core';
 
 test('das: it can search assets', async (t) => {
   // Given an Umi instance with DAS API
@@ -36,6 +37,7 @@ test('das: it can search assets', async (t) => {
   const assets = await das.searchAssets(umi, {
     owner: dasTestAsset1Owner,
     interface: 'MplCoreAsset',
+    skipDerivePlugins: true,
   });
 
   // The fetched assets structure is the same as with the MPL Core fetchAssetV1
@@ -49,8 +51,9 @@ test('das: it can fetch assets by owner', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
 
   // Then assets are fetched via the MPL Core DAS helper
-  const assets = await das.fetchAssetsByOwner(umi, {
+  const assets = await das.getAssetsByOwner(umi, {
     owner: dasTestAsset1Owner,
+    skipDerivePlugins: true,
   });
 
   // The fetched assets structure is the same as with the MPL Core fetchAssetV1
@@ -63,8 +66,9 @@ test('das: it can fetch assets by authority', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
 
   // Then assets are fetched via the MPL Core DAS helper
-  const assets = await das.fetchAssetsByAuthority(umi, {
+  const assets = await das.getAssetsByAuthority(umi, {
     authority: dasTestAsset1Owner,
+    skipDerivePlugins: true,
   });
 
   // The fetched assets structure is the same as with the MPL Core fetchAssetV1
@@ -77,8 +81,9 @@ test('das: it can fetch assets by authority if authority is not owner', async (t
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
 
   // Then assets are fetched via the MPL Core DAS helper
-  const assets = await das.fetchAssetsByAuthority(umi, {
+  const assets = await das.getAssetsByAuthority(umi, {
     authority: dasTestAsset2UpdateAuthority,
+    skipDerivePlugins: true,
   });
 
   // The fetched assets structure is the same as with the MPL Core fetchAssetV1
@@ -91,8 +96,9 @@ test('das: it can fetch assets by collection', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
 
   // Then assets are fetched via the MPL Core DAS helper
-  const assets = await das.fetchAssetsByCollection(umi, {
+  const assets = await das.getAssetsByCollection(umi, {
     collection: dasTestCollection1PubKey,
+    skipDerivePlugins: true,
   });
 
   // The fetched assets structure is the same as with the MPL Core fetchAssetV1
@@ -107,8 +113,9 @@ test('das: it can fetch collections by update authority', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
 
   // Then collections are fetched via the MPL Core DAS helper
-  const collections = await das.fetchCollectionsByUpdateAuthority(umi, {
+  const collections = await das.getCollectionsByUpdateAuthority(umi, {
     updateAuthority: publicKey(dasTestAsset1Owner),
+    skipDerivePlugins: true,
   });
 
   // One of the fetched collections structure is the same as with the MPL Core fetchCollectionV1
@@ -123,8 +130,9 @@ test('das: it can fetch collections by update authority if update authority is n
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
 
   // Then collections are fetched via the MPL Core DAS helper
-  const collections = await das.fetchCollectionsByUpdateAuthority(umi, {
+  const collections = await das.getCollectionsByUpdateAuthority(umi, {
     updateAuthority: publicKey(dasTestCollection2UpdateAuthority),
+    skipDerivePlugins: true,
   });
 
   // One of the fetched collections structure is the same as with the MPL Core fetchCollectionV1
@@ -140,8 +148,9 @@ test('das: it can convert a DAS asset with the edition plugin to the MPL Core as
   const assetPubKey = publicKey('94tbAopaajgjRndvvK31TBqNTkNbJdzifwW4ec7iqpYh');
 
   // Then the asset data parsed from DAS
-  const assets = await das.fetchAssetsByOwner(umi, {
+  const assets = await das.getAssetsByOwner(umi, {
     owner: publicKey('EBgC18R6zKNic1CLYKYEy3SMSz4zweymeqrMHkXeqpag'),
+    skipDerivePlugins: true,
   });
   const assetDas = assets.find((a) => a.publicKey === assetPubKey) ?? {};
   prepareAssetForComparison(assetDas as AssetV1, false);
@@ -162,8 +171,9 @@ test('das: it can convert a DAS collection with the master edition plugin to the
   );
 
   // Then the collection data parsed from DAS
-  const collections = await das.fetchCollectionsByUpdateAuthority(umi, {
+  const collections = await das.getCollectionsByUpdateAuthority(umi, {
     updateAuthority: publicKey('EBgC18R6zKNic1CLYKYEy3SMSz4zweymeqrMHkXeqpag'),
+    skipDerivePlugins: true,
   });
   const collectionDas =
     collections.find((a) => a.publicKey === collectionPubKey) ?? {};
@@ -177,7 +187,37 @@ test('das: it can convert a DAS collection with the master edition plugin to the
   t.like(collectionDas, collectionMplCore);
 });
 
+
+test('das: it can fetch asset with oracle', async (t) => {
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+  const assets = await das.searchAssets(umi, {
+    owner: publicKey('APrZTeVysBJqAznfLXS71NAzjr2fCVTSF1A66MeErzM7')
+  })
+
+  const asset = assets.find((a) => a.publicKey === "AFENffFzHQaT1c9GzLfJjUZPY4ZYbHBj7NKA9UgMv6RT")!
+  prepareAssetForComparison(asset, false)
+
+  const mplCoreAsset = await fetchAssetV1(umi, asset.publicKey);
+  prepareAssetForComparison(mplCoreAsset)
+
+  t.like(asset, mplCoreAsset)
+});
+
+test('das: it can fetch derived asset', async (t) => {
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+  const assets = await das.getAssetsByCollection(umi, {
+    collection: publicKey('4waGHv3uwEvvZ35VNh8xZrVAkuDr6tEx8YnCvxYN4A7A')
+  })
+
+  const asset = assets.find((a) => a.publicKey === "9KvAqZVYJbXZzNvaV1HhxvybD6xfguztQwnqhkmzxWV3")!
+  prepareAssetForComparison(asset, false)
+
+  const mplCoreAsset = await fetchAsset(umi, asset.publicKey);
+  prepareAssetForComparison(mplCoreAsset)
+
+  t.like(asset, mplCoreAsset)
+});
+
 // TODO
-test.skip('das: oracle', async (t) => {});
 test.skip('das: lifecycle hooks', async (t) => {});
 test.skip('das: data store', async (t) => {});

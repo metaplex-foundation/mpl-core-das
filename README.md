@@ -58,6 +58,43 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
    }); 
    ```
 
+## Plugin Derivations
+
+This library will automatically derive the plugins in assets inherited from the collection. 
+
+Read more about plugin inheritance and precedence [here.](https://developers.metaplex.com/core/plugins)
+
+To disable automatic derivation:
+
+```ts
+const assetsByOwner = await das.getAssetsByOwner(umi, {
+  owner: publicKey('<ownerPublicKey>'),
+  skipDerivePlugins: true,
+});
+
+```
+
+You can also manually derive the plugins for the asset if you have already fetched the collection at a prior time
+using the `mpl-core` JavaScript SDK like:
+
+
+```js
+import { deriveAssetPlugins, fetchCollection } from '@metaplex-foundation/mpl-core'
+
+//...
+
+const collection = await fetchCollection(umi, publicKey('<collectionPublicKey>'))
+
+const assetsByCollection = await das.getAssetsByCollection(umi, {
+  collection: collection.publicKey,
+  skipDerivePlugins: true,
+});
+
+const derivedAssets = assetsByCollection.map((asset) => deriveAssetPlugins(asset, collection))
+```
+
+
+
 ## Contributing
 
 Check out the [Contributing Guide](./CONTRIBUTING.md) to learn more about how to contribute to this library.

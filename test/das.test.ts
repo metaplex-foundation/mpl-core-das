@@ -221,7 +221,8 @@ test.serial('das: it can fetch asset with oracle', async (t) => {
   t.like(asset, mplCoreAsset);
 });
 
-test.serial('das: it can fetch derived asset', async (t) => {
+// TODO renenable after more das providers support this
+test.skip('das: it can fetch derived asset', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
   const assets = await das.getAssetsByCollection(umi, {
     collection: publicKey('4waGHv3uwEvvZ35VNh8xZrVAkuDr6tEx8YnCvxYN4A7A'),

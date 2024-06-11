@@ -24,7 +24,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "peerDependencies": {
-    "@metaplex-foundation/digital-asset-standard-api": "^1.0.4-alpha.0",
+    "@metaplex-foundation/digital-asset-standard-api": ">=1.0.4-alpha.0",
     "@metaplex-foundation/mpl-core": ">=1.0.1",
     "@metaplex-foundation/umi": ">=0.8.2 < 1"
   },

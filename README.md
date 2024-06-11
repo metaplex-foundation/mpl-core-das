@@ -38,22 +38,22 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
    });
    
    // Fetch assets by authority
-   const assetsByAuthority = await das.fetchAssetsByAuthority(umi, {
+   const assetsByAuthority = await das.getAssetsByAuthority(umi, {
      authority: publicKey('<authorityPublicKey>'),
    });
    
    // Fetch assets by owner
-   const assetsByOwner = await das.fetchAssetsByOwner(umi, {
+   const assetsByOwner = await das.getAssetsByOwner(umi, {
      owner: publicKey('<ownerPublicKey>'),
    });
    
    // Fetch assets by collection
-   const assetsByCollection = await das.fetchAssetsByCollection(umi, {
+   const assetsByCollection = await das.getAssetsByCollection(umi, {
      collection: publicKey('<collectionPublicKey>'),
    });
    
    // Fetch collections by authority
-   const collectionsByUpdateAuthority = await das.fetchCollectionsByUpdateAuthority(umi, {
+   const collectionsByUpdateAuthority = await das.getCollectionsByUpdateAuthority(umi, {
      updateAuthority: publicKey('<updateAuthorityPublicKey>'),
    }); 
    ```

@@ -1,5 +1,5 @@
 import test from 'ava';
-import {  publicKey } from '@metaplex-foundation/umi';
+import { publicKey } from '@metaplex-foundation/umi';
 import {
   AssetV1,
   CollectionV1,
@@ -187,35 +187,38 @@ test('das: it can convert a DAS collection with the master edition plugin to the
   t.like(collectionDas, collectionMplCore);
 });
 
-
 test('das: it can fetch asset with oracle', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
   const assets = await das.searchAssets(umi, {
-    owner: publicKey('APrZTeVysBJqAznfLXS71NAzjr2fCVTSF1A66MeErzM7')
-  })
+    owner: publicKey('APrZTeVysBJqAznfLXS71NAzjr2fCVTSF1A66MeErzM7'),
+  });
 
-  const asset = assets.find((a) => a.publicKey === "AFENffFzHQaT1c9GzLfJjUZPY4ZYbHBj7NKA9UgMv6RT")!
-  prepareAssetForComparison(asset, false)
+  const asset = assets.find(
+    (a) => a.publicKey === 'AFENffFzHQaT1c9GzLfJjUZPY4ZYbHBj7NKA9UgMv6RT'
+  )!;
+  prepareAssetForComparison(asset, false);
 
   const mplCoreAsset = await fetchAssetV1(umi, asset.publicKey);
-  prepareAssetForComparison(mplCoreAsset)
+  prepareAssetForComparison(mplCoreAsset);
 
-  t.like(asset, mplCoreAsset)
+  t.like(asset, mplCoreAsset);
 });
 
 test('das: it can fetch derived asset', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
   const assets = await das.getAssetsByCollection(umi, {
-    collection: publicKey('4waGHv3uwEvvZ35VNh8xZrVAkuDr6tEx8YnCvxYN4A7A')
-  })
+    collection: publicKey('4waGHv3uwEvvZ35VNh8xZrVAkuDr6tEx8YnCvxYN4A7A'),
+  });
 
-  const asset = assets.find((a) => a.publicKey === "9KvAqZVYJbXZzNvaV1HhxvybD6xfguztQwnqhkmzxWV3")!
-  prepareAssetForComparison(asset, false)
+  const asset = assets.find(
+    (a) => a.publicKey === '9KvAqZVYJbXZzNvaV1HhxvybD6xfguztQwnqhkmzxWV3'
+  )!;
+  prepareAssetForComparison(asset, false);
 
   const mplCoreAsset = await fetchAsset(umi, asset.publicKey);
-  prepareAssetForComparison(mplCoreAsset)
+  prepareAssetForComparison(mplCoreAsset);
 
-  t.like(asset, mplCoreAsset)
+  t.like(asset, mplCoreAsset);
 });
 
 // TODO

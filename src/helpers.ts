@@ -107,7 +107,9 @@ function getRuleSet(dasRuleSet: string | Record<string, any>): RuleSet {
   const ruleSetKind = isRuleSetString ? dasRuleSet : Object.keys(dasRuleSet)[0];
   const ruleSetData: PublicKey[] =
     !isRuleSetString && ruleSetKind
-      ? dasRuleSet[ruleSetKind].map((bytes: any) => publicKey(typeof bytes === 'string' ? bytes : new Uint8Array(bytes)))
+      ? dasRuleSet[ruleSetKind].map((bytes: any) =>
+          publicKey(typeof bytes === 'string' ? bytes : new Uint8Array(bytes))
+        )
       : [];
 
   // RuleSet has both __kind and type for backwards compatibility
@@ -134,7 +136,7 @@ function getRuleSet(dasRuleSet: string | Record<string, any>): RuleSet {
 }
 
 function parseExtraAccount(data: any): ExtraAccount | undefined {
-  let result: ExtraAccount | undefined
+  let result: ExtraAccount | undefined;
   Object.keys(data).forEach((key) => {
     const acc = data[key];
     const type = convertSnakeCase(key, 'pascal');
@@ -148,7 +150,7 @@ function parseExtraAccount(data: any): ExtraAccount | undefined {
           type,
           isSigner: acc.is_signer,
           isWritable: acc.is_writable,
-        }
+        };
         break;
       case 'Address':
         result = {
@@ -156,7 +158,7 @@ function parseExtraAccount(data: any): ExtraAccount | undefined {
           isSigner: acc.is_signer,
           isWritable: acc.is_writable,
           address: publicKey(acc.address),
-        }
+        };
         break;
       case 'CustomPda':
         result = {
@@ -167,34 +169,37 @@ function parseExtraAccount(data: any): ExtraAccount | undefined {
             if (typeof seed === 'string') {
               return {
                 type: seed,
-              }
+              };
             }
             if (seed.address) {
               return {
                 type: 'Address',
                 pubkey: publicKey(seed.address),
-              }
+              };
             }
             if (seed.bytes) {
               return {
                 type: 'Bytes',
                 bytes: new Uint8Array(seed.bytes),
-              }
+              };
             }
-            return null
+            return null;
           }),
-          customProgramId: acc.custom_program_id ? publicKey(acc.custom_program_id) : undefined,
-        }
+          customProgramId: acc.custom_program_id
+            ? publicKey(acc.custom_program_id)
+            : undefined,
+        };
         break;
       default:
-      }
-    })
+    }
+  });
 
-  return result
+  return result;
 }
 
 function parseLifecycleChecks(data: any): LifecycleChecks {
-  return Object.keys(data).reduce((acc: LifecycleChecks, key) => ({
+  return Object.keys(data).reduce(
+    (acc: LifecycleChecks, key) => ({
       ...acc,
       [key]: data[key].map((check: string) => {
         switch (check) {
@@ -206,43 +211,65 @@ function parseLifecycleChecks(data: any): LifecycleChecks {
           default:
             return CheckResult.CAN_REJECT;
         }
-      })
-    }), {})
+      }),
+    }),
+    {}
+  );
 }
 
 function dasExternalPluginsToCoreExternalPlugins(
   externalPlugins: Record<string, any>[]
 ) {
-  return externalPlugins.reduce((acc: ExternalPluginAdaptersList, externalPlugin) => {
-    const { authority, offset, type, adapter_config: adapterConfig } = externalPlugin;
-    const authorityAddress = authority?.address;
+  return externalPlugins.reduce(
+    (acc: ExternalPluginAdaptersList, externalPlugin) => {
+      const {
+        authority,
+        offset,
+        type,
+        adapter_config: adapterConfig,
+      } = externalPlugin;
+      const authorityAddress = authority?.address;
 
-    if (type === 'Oracle') {
-      if (!acc.oracles) {
-        acc.oracles = [];
+      if (type === 'Oracle') {
+        if (!acc.oracles) {
+          acc.oracles = [];
+        }
+
+        acc.oracles.push({
+          type: 'Oracle',
+          authority: {
+            type: authority.type,
+            ...(authorityAddress
+              ? { address: publicKey(authorityAddress) }
+              : {}),
+          },
+          baseAddress: adapterConfig.base_address,
+          resultsOffset:
+            typeof adapterConfig.results_offset === 'string'
+              ? {
+                  type: convertSnakeCase(
+                    adapterConfig.results_offset,
+                    'pascal'
+                  ) as any,
+                }
+              : {
+                  type: 'Custom',
+                  offset: BigInt(adapterConfig.results_offset.custom),
+                },
+          baseAddressConfig: adapterConfig.base_address_config
+            ? parseExtraAccount(adapterConfig.base_address_config)
+            : undefined,
+          lifecycleChecks: externalPlugin.lifecycle_checks
+            ? parseLifecycleChecks(externalPlugin.lifecycle_checks)
+            : undefined,
+          offset: BigInt(offset),
+        });
       }
 
-      acc.oracles.push({
-        type: 'Oracle',
-        authority: {
-          type: authority.type,
-          ...(authorityAddress ? { address: publicKey(authorityAddress) } : {}),
-        },
-        baseAddress: adapterConfig.base_address,
-        resultsOffset: typeof adapterConfig.results_offset === 'string' ? {
-          type: convertSnakeCase(adapterConfig.results_offset, 'pascal') as any
-        } : {
-          type: 'Custom',
-          offset: BigInt(adapterConfig.results_offset.custom)
-        },
-        baseAddressConfig: adapterConfig.base_address_config ? parseExtraAccount(adapterConfig.base_address_config) : undefined,
-        lifecycleChecks: externalPlugin.lifecycle_checks ? parseLifecycleChecks(externalPlugin.lifecycle_checks): undefined,
-        offset: BigInt(offset),
-      });
-    }
-
-    return acc;
-  }, {});
+      return acc;
+    },
+    {}
+  );
 }
 
 function dasPluginDataToCorePluginData(
@@ -262,8 +289,7 @@ function dasPluginDataToCorePluginData(
   | AddBlocker
   | ImmutableMetadata
   | Autograph
-  | VerifiedCreators
-  {
+  | VerifiedCreators {
   // TODO: Refactor when DAS types are defined
   return (({
     basis_points,
@@ -276,7 +302,7 @@ function dasPluginDataToCorePluginData(
     max_supply,
     name,
     uri,
-    signatures
+    signatures,
   }) => ({
     ...(basis_points !== undefined ? { basisPoints: basis_points } : {}),
     ...(creators !== undefined
@@ -297,7 +323,7 @@ function dasPluginDataToCorePluginData(
     ...(max_supply !== undefined ? { maxSupply: max_supply } : {}),
     ...(name !== undefined ? { name } : {}),
     ...(uri !== undefined ? { uri } : {}),
-    ...(signatures !== undefined ? { signatures } : {})
+    ...(signatures !== undefined ? { signatures } : {}),
   }))(dasPluginData);
 }
 
@@ -397,7 +423,9 @@ export function dasAssetToCoreAssetOrCollection(
     name,
     ...getAccountHeader(executable, lamps, rentEpoch),
     ...dasPluginsToCorePlugins(plugins),
-    ...(externalPlugins !== undefined ? dasExternalPluginsToCoreExternalPlugins(externalPlugins) : {}),
+    ...(externalPlugins !== undefined
+      ? dasExternalPluginsToCoreExternalPlugins(externalPlugins)
+      : {}),
     ...handleUnknownPlugins(unknownPlugins),
     // pluginHeader: // TODO: Reconstruct
   };

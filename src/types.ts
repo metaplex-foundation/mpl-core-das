@@ -7,4 +7,4 @@ export type Pagination = Pick<
 
 export type AssetOptions = {
   skipDerivePlugins?: boolean;
-}
+};

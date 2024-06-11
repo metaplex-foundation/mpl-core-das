@@ -3,7 +3,11 @@ import {
   DasApiAssetInterface,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import { AssetV1, CollectionV1, deriveAssetPluginsWithFetch } from '@metaplex-foundation/mpl-core';
+import {
+  AssetV1,
+  CollectionV1,
+  deriveAssetPluginsWithFetch,
+} from '@metaplex-foundation/mpl-core';
 import { MPL_CORE_ASSET, MPL_CORE_COLLECTION } from './constants';
 import { AssetOptions, Pagination } from './types';
 import { dasAssetToCoreAssetOrCollection } from './helpers';
@@ -54,7 +58,8 @@ function getAssetsByOwner(
   context: Umi,
   input: {
     owner: PublicKey;
-  } & Pagination & AssetOptions
+  } & Pagination &
+    AssetOptions
 ) {
   return searchAssets(context, {
     ...input,
@@ -66,7 +71,8 @@ function getAssetsByAuthority(
   context: Umi,
   input: {
     authority: PublicKey;
-  } & Pagination & AssetOptions
+  } & Pagination &
+    AssetOptions
 ) {
   return searchAssets(context, {
     ...input,
@@ -78,7 +84,8 @@ function getAssetsByCollection(
   context: Umi,
   input: {
     collection: PublicKey;
-  } & Pagination & AssetOptions
+  } & Pagination &
+    AssetOptions
 ) {
   return searchAssets(context, {
     ...input,
@@ -90,7 +97,8 @@ function getCollectionsByUpdateAuthority(
   context: Umi,
   input: {
     updateAuthority: PublicKey;
-  } & Pagination & AssetOptions
+  } & Pagination &
+    AssetOptions
 ) {
   return searchCollections(context, {
     ...input,

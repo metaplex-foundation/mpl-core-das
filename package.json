@@ -2,7 +2,7 @@
   "name": "@metaplex-foundation/mpl-core-das",
   "description": "DAS helpers for MPL Core",
   "license": "Apache-2.0",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "homepage": "https://metaplex.com",
   "repository": "",

@@ -6,11 +6,9 @@ import {
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
   AddBlocker,
-  AssetV1,
   Attributes,
   UpdateAuthority,
   BurnDelegate,
-  CollectionV1,
   Edition,
   FreezeDelegate,
   getPluginSerializer,
@@ -35,6 +33,10 @@ import {
   CheckResult,
   Autograph,
   VerifiedCreators,
+  ExternalPluginAdapterType,
+  getExternalPluginAdapterSerializer,
+  BaseExternalPluginAdapter,
+  oracleFromBase,
 } from '@metaplex-foundation/mpl-core';
 import {
   AccountHeader,
@@ -46,6 +48,7 @@ import {
   some,
 } from '@metaplex-foundation/umi';
 import { MPL_CORE_COLLECTION } from './constants';
+import { AssetResult, CollectionResult } from './types';
 
 function convertSnakeCase(str: string, toCase: 'pascal' | 'camel' = 'camel') {
   return str
@@ -379,18 +382,65 @@ function handleUnknownPlugins(unknownDasPlugins?: Record<string, any>[]) {
   }, {});
 }
 
+function handleUnknownExternalPlugins(
+  unknownDasPlugins?: Record<string, any>[]
+) {
+  if (!unknownDasPlugins) return {};
+
+  return unknownDasPlugins.reduce(
+    (acc: ExternalPluginAdaptersList, unknownPlugin) => {
+      if (!ExternalPluginAdapterType[unknownPlugin.type]) return acc;
+
+      const deserializedPlugin =
+        getExternalPluginAdapterSerializer().deserialize(
+          base64ToUInt8Array(unknownPlugin.data)
+        )[0];
+
+      const {
+        authority,
+        offset,
+        lifecycle_checks: lifecycleChecks,
+      } = unknownPlugin;
+
+      const mappedPlugin: BaseExternalPluginAdapter = {
+        lifecycleChecks: lifecycleChecks
+          ? parseLifecycleChecks(lifecycleChecks)
+          : undefined,
+        authority,
+        offset: BigInt(offset),
+      };
+
+      if (deserializedPlugin.__kind === 'Oracle') {
+        if (!acc.oracles) {
+          acc.oracles = [];
+        }
+
+        acc.oracles.push({
+          type: 'Oracle',
+          ...mappedPlugin,
+          // Oracle conversion does not use the record or account data so we pass in dummies
+          ...oracleFromBase(
+            deserializedPlugin.fields[0],
+            {} as any,
+            new Uint8Array(0)
+          ),
+        });
+      }
+
+      return acc;
+    },
+    {}
+  );
+}
+
 export function dasAssetToCoreAssetOrCollection(
   dasAsset: DasApiAsset
-): AssetV1 | CollectionV1 {
-  // TODO: Define types in Umi DAS client.
+): AssetResult | CollectionResult {
   const {
     interface: assetInterface,
     id,
     ownership: { owner },
-    content: {
-      metadata: { name },
-      json_uri: uri,
-    },
+    content,
     compression: { seq },
     grouping,
     authorities,
@@ -401,32 +451,27 @@ export function dasAssetToCoreAssetOrCollection(
     rent_epoch: rentEpoch,
     mpl_core_info: mplCoreInfo,
     external_plugins: externalPlugins,
+    unknown_external_plugins: unknownExternalPlugins,
   } = dasAsset as DasApiAsset & {
-    plugins: Record<string, any>;
-    unknown_plugins?: Array<Record<string, any>>;
     executable?: boolean;
     lamports?: number;
     rent_epoch?: number;
-    mpl_core_info?: {
-      num_minted?: number;
-      current_size?: number;
-      plugins_json_version: number;
-    };
-    external_plugins: Record<string, any>[];
   };
   const { num_minted: numMinted = 0, current_size: currentSize = 0 } =
     mplCoreInfo ?? {};
 
   const commonFields = {
     publicKey: id,
-    uri,
-    name,
+    uri: content.json_uri,
+    name: content.metadata.name,
+    content,
     ...getAccountHeader(executable, lamps, rentEpoch),
-    ...dasPluginsToCorePlugins(plugins),
+    ...(plugins ? dasPluginsToCorePlugins(plugins) : {}),
     ...(externalPlugins !== undefined
       ? dasExternalPluginsToCoreExternalPlugins(externalPlugins)
       : {}),
     ...handleUnknownPlugins(unknownPlugins),
+    ...handleUnknownExternalPlugins(unknownExternalPlugins),
     // pluginHeader: // TODO: Reconstruct
   };
 

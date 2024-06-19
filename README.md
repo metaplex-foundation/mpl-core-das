@@ -93,6 +93,22 @@ const assetsByCollection = await das.getAssetsByCollection(umi, {
 const derivedAssets = assetsByCollection.map((asset) => deriveAssetPlugins(asset, collection))
 ```
 
+## Using DAS-to-Core type conversions
+If you are working with not only Core assets, it might be useful to directly access the conversion helpers along side the other DAS asset types when fetching using [@metaplex-foundation/digital-asset-standard-api](https://github.com/metaplex-foundation/digital-asset-standard-api).
+
+
+```js
+// ... standard setup for @metaplex-foundation/digital-asset-standard-api
+
+const dasAssets = await umi.rpc.getAssetsByOwner({ owner: publicKey('<pubkey>') });
+
+// filter out only core assets
+const dasCoreAssets = assets.items.filter((a) => a.interface === 'MplCoreAsset')
+
+// convert them to AssetV1 type (actually AssetResult type which will also have the content field populated from DAS)
+const coreAssets = await das.dasAssetsToCoreAssets(umi, dasCoreAssets)
+
+```
 
 
 ## Contributing

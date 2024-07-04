@@ -241,4 +241,4 @@ test.serial('das: it can fetch derived asset', async (t) => {
 
 // TODO
 test.skip('das: lifecycle hooks', async (t) => {});
-test.skip('das: data store', async (t) => {});
+test.skip('das: app data', async (t) => {});

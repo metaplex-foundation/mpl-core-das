@@ -166,13 +166,8 @@ packages:
       - supports-color
     dev: true
 
-<<<<<<< Updated upstream
-  /@metaplex-foundation/digital-asset-standard-api@1.0.4-alpha.0(@metaplex-foundation/umi@0.9.1):
-    resolution: {integrity: sha512-xVhvDhpF/5jBxJ+rlMJh70C129G64pQ6YyylFnm1iHgMmsjmun0PlX87Jp8DQLpac8fdveQ862SVotELkyHV1g==}
-=======
   /@metaplex-foundation/digital-asset-standard-api@1.0.4(@metaplex-foundation/umi@0.9.1):
     resolution: {integrity: sha512-YSYyMnIoKNykDZTXsSCeiIOJ7NT5Ke2pzghXDsinRwHvwIZWv+zY5kJQBvTglAzYlt/GaI+noAhUZXXmSbp07A==}
->>>>>>> Stashed changes
     peerDependencies:
       '@metaplex-foundation/umi': '>= 0.8.2 < 1'
     dependencies:

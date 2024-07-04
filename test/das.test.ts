@@ -203,8 +203,7 @@ test.serial(
   }
 );
 
-// TODO renenable after more das providers support this
-test.skip('das: it can fetch asset with oracle', async (t) => {
+test.serial('das: it can fetch asset with oracle', async (t) => {
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
   const assets = await das.searchAssets(umi, {
     owner: publicKey('APrZTeVysBJqAznfLXS71NAzjr2fCVTSF1A66MeErzM7'),
@@ -237,6 +236,27 @@ test.serial('das: it can fetch derived asset', async (t) => {
   prepareAssetForComparison(mplCoreAsset);
 
   t.like(asset, mplCoreAsset);
+});
+
+test.serial('das: it can getAsset', async (t) => {
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+  const asset = await das.getAsset(
+    umi,
+    publicKey('9KvAqZVYJbXZzNvaV1HhxvybD6xfguztQwnqhkmzxWV3')
+  );
+  prepareAssetForComparison(asset, false);
+
+  const mplCoreAsset = await fetchAsset(umi, asset.publicKey);
+  prepareAssetForComparison(mplCoreAsset);
+
+  t.like(asset, mplCoreAsset);
+  t.like(asset.content, {
+    $schema: 'https://schema.metaplex.com/nft1.0.json',
+    json_uri: 'https://example.com/asset',
+    files: [],
+    metadata: { name: 'new name 2', symbol: '' },
+    links: {},
+  });
 });
 
 // TODO

@@ -1,12 +1,16 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 devDependencies:
   '@ava/typescript':
     specifier: ^4.1.0
     version: 4.1.0
   '@metaplex-foundation/digital-asset-standard-api':
-    specifier: ^1.0.4-alpha.2
-    version: 1.0.4-alpha.2(@metaplex-foundation/umi@0.9.1)
+    specifier: ^1.0.4
+    version: 1.0.4(@metaplex-foundation/umi@0.9.1)
   '@metaplex-foundation/mpl-core':
     specifier: 1.0.1
     version: 1.0.1(@metaplex-foundation/umi@0.9.1)(@noble/hashes@1.4.0)
@@ -162,8 +166,8 @@ packages:
       - supports-color
     dev: true
 
-  /@metaplex-foundation/digital-asset-standard-api@1.0.4-alpha.2(@metaplex-foundation/umi@0.9.1):
-    resolution: {integrity: sha512-IUkziTpulrZKAYDnMZp1PYXoPgynNHp3LMFOh5yeFdy6sE8XYvEcOf9S2oyo4wVtuXBnVqee/cIj/eGR0XNoow==}
+  /@metaplex-foundation/digital-asset-standard-api@1.0.4(@metaplex-foundation/umi@0.9.1):
+    resolution: {integrity: sha512-YSYyMnIoKNykDZTXsSCeiIOJ7NT5Ke2pzghXDsinRwHvwIZWv+zY5kJQBvTglAzYlt/GaI+noAhUZXXmSbp07A==}
     peerDependencies:
       '@metaplex-foundation/umi': '>= 0.8.2 < 1'
     dependencies:
@@ -3821,7 +3825,3 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false

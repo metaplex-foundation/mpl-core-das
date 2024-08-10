@@ -1,0 +1,10 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": ["src/index.ts"],
+    "includeVersion": true,
+    "readme": "none",
+    "out": "docs",
+    "navigationLinks": {
+        "Metaplex Developer Hub": "http://developers.metaplex.com"
+    }
+  }

@@ -67,16 +67,14 @@ test.serial('das: it can fetch assets by owner with showCollectionMetadata', asy
 
   // Then assets are fetched via the MPL Core DAS helper
   const assets = await das.getAssetsByOwner(umi, {
-    owner: dasTestAsset1Owner,
+    owner: publicKey('3AajDgUy6p8cYNr7FUGjN1tsph1PdNdqcp7bHmHVdqsB'),
     displayOptions: {
       showCollectionMetadata: true,
     },
     skipDerivePlugins: true,
   });
 
-  // At least one asset should have collection metadata
   console.log(assets.find(a => a.updateAuthority.type === 'Collection'));
-
 });
 
 test.serial('das: it can fetch assets by authority', async (t) => {

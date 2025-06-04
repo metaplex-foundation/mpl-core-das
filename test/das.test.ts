@@ -73,8 +73,18 @@ test.serial('das: it can fetch assets by owner with showCollectionMetadata', asy
     },
     skipDerivePlugins: true,
   });
-
-  console.log(assets.find(a => a.updateAuthority.type === 'Collection'));
+  
+  // Verify at least one asset has collection_metadata
+  const assetWithCollectionMetadata = assets.find((asset) => asset.collection_metadata);
+  t.truthy(assetWithCollectionMetadata, 'At least one asset should have collection_metadata');
+  
+  // Verify the structure of collection_metadata
+  if (assetWithCollectionMetadata?.collection_metadata) {
+    t.truthy(assetWithCollectionMetadata.collection_metadata.name, 'collection_metadata should have name');
+    t.truthy(assetWithCollectionMetadata.collection_metadata.symbol, 'collection_metadata should have symbol');  
+    t.truthy(assetWithCollectionMetadata.collection_metadata.description, 'collection_metadata should have description');
+    t.truthy(assetWithCollectionMetadata.collection_metadata.image, 'collection_metadata should have image');
+  }
 });
 
 test.serial('das: it can fetch assets by authority', async (t) => {

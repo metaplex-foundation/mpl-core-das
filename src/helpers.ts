@@ -558,6 +558,7 @@ export function dasAssetToCoreAssetOrCollection(
     uri: content.json_uri,
     name: content.metadata.name,
     content,
+    collection_metadata: grouping[0]?.collection_metadata,
     ...getAccountHeader(executable, lamps, rentEpoch),
     ...(plugins ? dasPluginsToCorePlugins(plugins) : {}),
     ...(externalPlugins !== undefined

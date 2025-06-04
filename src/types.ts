@@ -18,6 +18,12 @@ export type AssetOptions = {
  */
 export type DasExtra = {
   content: DasApiAssetContent;
+  collection_metadata?: {
+    name: string;
+    symbol: string;
+    description: string;
+    image: string;
+};
 };
 
 export type AssetResult = AssetV1 & DasExtra;

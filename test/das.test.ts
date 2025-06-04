@@ -61,6 +61,24 @@ test.serial('das: it can fetch assets by owner', async (t) => {
   t.like(asset, dasTestAsset1);
 });
 
+test.serial('das: it can fetch assets by owner with showCollectionMetadata', async (t) => {
+  // Given an Umi instance with DAS API
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+
+  // Then assets are fetched via the MPL Core DAS helper
+  const assets = await das.getAssetsByOwner(umi, {
+    owner: dasTestAsset1Owner,
+    displayOptions: {
+      showCollectionMetadata: true,
+    },
+    skipDerivePlugins: true,
+  });
+
+  // At least one asset should have collection metadata
+  console.log(assets.find(a => a.updateAuthority.type === 'Collection'));
+
+});
+
 test.serial('das: it can fetch assets by authority', async (t) => {
   // Given an Umi instance with DAS API
   const umi = createUmiWithDas(DAS_API_ENDPOINT);
@@ -259,6 +277,35 @@ test.serial('das: it can getAsset', async (t) => {
   });
 });
 
+test.serial('das: it can getAsset with appData and linkedAppData', async (t) => {
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+  const asset = await das.getAsset(
+    umi,
+    publicKey('9zevazbKHth3X2AxB1H31L8v7L1GDig8wx2AjWkogFS5')
+  );
+  prepareAssetForComparison(asset, false);
+
+  const mplCoreAsset = await fetchAsset(umi, asset.publicKey);
+  prepareAssetForComparison(mplCoreAsset);
+  
+  t.like(asset, mplCoreAsset);
+  t.like(asset.content, {
+    $schema: 'https://schema.metaplex.com/nft1.0.json',
+    json_uri: 'https://raw.githubusercontent.com/Bread-Heads-NFT/arcade-landing/refs/heads/main/public/asset.json',
+    files: [{
+      mime: 'image/png',
+      uri: 'https://raw.githubusercontent.com/Bread-Heads-NFT/arcade-landing/refs/heads/main/public/asset.png',
+    }],
+    metadata: { name: 'Blockiosaurus', symbol: '' },
+    links: {
+      external_url: 'https://arcade.breadheads.io/',
+      image: 'https://raw.githubusercontent.com/Bread-Heads-NFT/arcade-landing/refs/heads/main/public/asset.png',
+    },
+  });
+
+  t.true(asset.appDatas!.length > 0, 'appDatas should not be empty');
+  t.true(asset.linkedAppDatas!.length > 0, 'linkedAppDatas should not be empty');
+});
+
 // TODO
 test.skip('das: lifecycle hooks', async (t) => {});
-test.skip('das: app data', async (t) => {});

@@ -1,6 +1,8 @@
 import { PublicKey, Umi } from '@metaplex-foundation/umi';
 import {
   DasApiAsset,
+  DisplayOptions,
+//    DisplayOptions,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
@@ -38,6 +40,7 @@ async function searchAssets(
     ...input,
     interface: input.interface ?? MPL_CORE_ASSET,
     burnt: false,
+    displayOptions: input.displayOptions,
   });
 
   const mappedAssets = dasAssets.items.map((dasAsset) =>
@@ -62,12 +65,14 @@ function getAssetsByOwner(
   context: Umi,
   input: {
     owner: PublicKey;
+    displayOptions?: DisplayOptions
   } & Pagination &
-    AssetOptions
+    AssetOptions & DisplayOptions
 ) {
   return searchAssets(context, {
     ...input,
     owner: input.owner,
+    displayOptions: input.displayOptions,
   });
 }
 
@@ -75,12 +80,14 @@ function getAssetsByAuthority(
   context: Umi,
   input: {
     authority: PublicKey;
+    displayOptions?: DisplayOptions
   } & Pagination &
     AssetOptions
 ) {
   return searchAssets(context, {
     ...input,
     authority: input.authority,
+    displayOptions: input.displayOptions,
   });
 }
 
@@ -88,12 +95,14 @@ function getAssetsByCollection(
   context: Umi,
   input: {
     collection: PublicKey;
+    displayOptions?: DisplayOptions;
   } & Pagination &
     AssetOptions
 ) {
   return searchAssets(context, {
     ...input,
     grouping: ['collection', input.collection],
+    displayOptions: input.displayOptions,
   });
 }
 
@@ -107,9 +116,10 @@ function getAssetsByCollection(
 async function getAsset(
   context: Umi,
   asset: PublicKey,
-  options: AssetOptions = {}
+  options: AssetOptions = {},
+  displayOptions?: DisplayOptions
 ): Promise<AssetResult> {
-  const dasAsset = await context.rpc.getAsset(asset);
+  const dasAsset = await context.rpc.getAsset({assetId: asset, displayOptions: displayOptions});
 
   return (
     await dasAssetsToCoreAssets(context, [dasAsset], options)
@@ -124,9 +134,10 @@ async function getAsset(
  */
 async function getCollection(
   context: Umi,
-  collection: PublicKey
+  collection: PublicKey,
+  displayOptions?: DisplayOptions
 ): Promise<CollectionResult> {
-  const dasCollection = await context.rpc.getAsset(collection);
+  const dasCollection = await context.rpc.getAsset({assetId: collection, displayOptions: displayOptions});
 
   return dasAssetToCoreCollection(context, dasCollection);
 }
@@ -135,12 +146,14 @@ function getCollectionsByUpdateAuthority(
   context: Umi,
   input: {
     updateAuthority: PublicKey;
+    displayOptions?: DisplayOptions
   } & Pagination &
     AssetOptions
 ) {
   return searchCollections(context, {
     ...input,
     authority: input.updateAuthority,
+    displayOptions: input.displayOptions,
   });
 }
 

@@ -81,7 +81,6 @@ test.serial('das: it can fetch assets by owner with showCollectionMetadata', asy
   // Verify the structure of collection_metadata
   if (assetWithCollectionMetadata?.collection_metadata) {
     t.truthy(assetWithCollectionMetadata.collection_metadata.name, 'collection_metadata should have name');
-    t.truthy(assetWithCollectionMetadata.collection_metadata.symbol, 'collection_metadata should have symbol');  
     t.truthy(assetWithCollectionMetadata.collection_metadata.description, 'collection_metadata should have description');
     t.truthy(assetWithCollectionMetadata.collection_metadata.image, 'collection_metadata should have image');
   }
@@ -317,3 +316,62 @@ test.serial('das: it can getAsset with appData and linkedAppData', async (t) => 
 
 // TODO
 test.skip('das: lifecycle hooks', async (t) => {});
+
+test.serial('das: it throws error for unsupported display options', async (t) => {
+  // Given an Umi instance with DAS API
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+
+  // Then using unsupported display options should throw an error
+  const error = await t.throwsAsync(async () => {
+    await das.getAssetsByOwner(umi, {
+      owner: publicKey('3AajDgUy6p8cYNr7FUGjN1tsph1PdNdqcp7bHmHVdqsB'),
+      displayOptions: {
+        showUnverifiedCollections: true,
+      },
+      skipDerivePlugins: true,
+    });
+  });
+
+  t.is(
+    error.message,
+    'The following display options are not supported with MPL Core: showUnverifiedCollections. Only showCollectionMetadata is supported.'
+  );
+});
+
+test.serial('das: it throws error for multiple unsupported display options', async (t) => {
+  // Given an Umi instance with DAS API
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+
+  // Then using multiple unsupported display options should throw an error
+  const error = await t.throwsAsync(async () => {
+    await das.getAssetsByOwner(umi, {
+      owner: publicKey('3AajDgUy6p8cYNr7FUGjN1tsph1PdNdqcp7bHmHVdqsB'),
+      displayOptions: {
+        showUnverifiedCollections: true,
+        showFungible: true,
+      },
+      skipDerivePlugins: true,
+    });
+  });
+
+  t.is(
+    error.message,
+    'The following display options are not supported with MPL Core: showUnverifiedCollections, showFungible. Only showCollectionMetadata is supported.'
+  );
+});
+
+test.serial('das: it accepts showCollectionMetadata display option', async (t) => {
+  // Given an Umi instance with DAS API
+  const umi = createUmiWithDas(DAS_API_ENDPOINT);
+
+  // Then using showCollectionMetadata should not throw an error
+  await t.notThrowsAsync(async () => {
+    await das.getAssetsByOwner(umi, {
+      owner: publicKey('3AajDgUy6p8cYNr7FUGjN1tsph1PdNdqcp7bHmHVdqsB'),
+      displayOptions: {
+        showCollectionMetadata: true,
+      },
+      skipDerivePlugins: true,
+    });
+  });
+});

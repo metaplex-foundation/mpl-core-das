@@ -18,6 +18,21 @@ import {
 } from './types';
 import { dasAssetToCoreAssetOrCollection } from './helpers';
 
+function validateDisplayOptions(displayOptions?: DisplayOptions) {
+  if (!displayOptions) return;
+  
+  const allowedOptions = ['showCollectionMetadata'];
+  const providedOptions = Object.keys(displayOptions);
+  
+  const invalidOptions = providedOptions.filter(opt => !allowedOptions.includes(opt));
+  if (invalidOptions.length > 0) {
+    throw new Error(
+      `The following display options are not supported with MPL Core: ${invalidOptions.join(', ')}. ` +
+      'Only showCollectionMetadata is supported.'
+    );
+  }
+}
+
 async function searchAssets(
   context: Umi,
   input: Omit<SearchAssetsRpcInput, 'interface' | 'burnt'> & {
@@ -36,6 +51,8 @@ async function searchAssets(
     interface?: typeof MPL_CORE_ASSET | typeof MPL_CORE_COLLECTION;
   } & AssetOptions
 ) {
+  validateDisplayOptions(input.displayOptions);
+  
   const dasAssets = await context.rpc.searchAssets({
     ...input,
     interface: input.interface ?? MPL_CORE_ASSET,
@@ -67,8 +84,9 @@ function getAssetsByOwner(
     owner: PublicKey;
     displayOptions?: DisplayOptions
   } & Pagination &
-    AssetOptions & DisplayOptions
+    AssetOptions
 ) {
+  validateDisplayOptions(input.displayOptions);
   return searchAssets(context, {
     ...input,
     owner: input.owner,
@@ -84,6 +102,7 @@ function getAssetsByAuthority(
   } & Pagination &
     AssetOptions
 ) {
+  validateDisplayOptions(input.displayOptions);
   return searchAssets(context, {
     ...input,
     authority: input.authority,
@@ -99,6 +118,7 @@ function getAssetsByCollection(
   } & Pagination &
     AssetOptions
 ) {
+  validateDisplayOptions(input.displayOptions);
   return searchAssets(context, {
     ...input,
     grouping: ['collection', input.collection],
@@ -119,6 +139,7 @@ async function getAsset(
   options: AssetOptions = {},
   displayOptions?: DisplayOptions
 ): Promise<AssetResult> {
+  validateDisplayOptions(displayOptions);
   const dasAsset = await context.rpc.getAsset({assetId: asset, displayOptions: displayOptions});
 
   return (
@@ -137,6 +158,7 @@ async function getCollection(
   collection: PublicKey,
   displayOptions?: DisplayOptions
 ): Promise<CollectionResult> {
+  validateDisplayOptions(displayOptions);
   const dasCollection = await context.rpc.getAsset({assetId: collection, displayOptions: displayOptions});
 
   return dasAssetToCoreCollection(context, dasCollection);
@@ -150,6 +172,7 @@ function getCollectionsByUpdateAuthority(
   } & Pagination &
     AssetOptions
 ) {
+  validateDisplayOptions(input.displayOptions);
   return searchCollections(context, {
     ...input,
     authority: input.updateAuthority,

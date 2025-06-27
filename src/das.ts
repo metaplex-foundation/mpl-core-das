@@ -2,7 +2,7 @@ import { PublicKey, Umi } from '@metaplex-foundation/umi';
 import {
   DasApiAsset,
   DisplayOptions,
-//    DisplayOptions,
+  //    DisplayOptions,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
@@ -20,15 +20,17 @@ import { dasAssetToCoreAssetOrCollection } from './helpers';
 
 function validateDisplayOptions(displayOptions?: DisplayOptions) {
   if (!displayOptions) return;
-  
+
   const allowedOptions = ['showCollectionMetadata'];
   const providedOptions = Object.keys(displayOptions);
-  
-  const invalidOptions = providedOptions.filter(opt => !allowedOptions.includes(opt));
+
+  const invalidOptions = providedOptions.filter(
+    (opt) => !allowedOptions.includes(opt)
+  );
   if (invalidOptions.length > 0) {
     throw new Error(
       `The following display options are not supported with MPL Core: ${invalidOptions.join(', ')}. ` +
-      'Only showCollectionMetadata is supported.'
+        'Only showCollectionMetadata is supported.'
     );
   }
 }
@@ -52,7 +54,7 @@ async function searchAssets(
   } & AssetOptions
 ) {
   validateDisplayOptions(input.displayOptions);
-  
+
   const dasAssets = await context.rpc.searchAssets({
     ...input,
     interface: input.interface ?? MPL_CORE_ASSET,
@@ -82,7 +84,7 @@ function getAssetsByOwner(
   context: Umi,
   input: {
     owner: PublicKey;
-    displayOptions?: DisplayOptions
+    displayOptions?: DisplayOptions;
   } & Pagination &
     AssetOptions
 ) {
@@ -98,7 +100,7 @@ function getAssetsByAuthority(
   context: Umi,
   input: {
     authority: PublicKey;
-    displayOptions?: DisplayOptions
+    displayOptions?: DisplayOptions;
   } & Pagination &
     AssetOptions
 ) {
@@ -140,7 +142,10 @@ async function getAsset(
   displayOptions?: DisplayOptions
 ): Promise<AssetResult> {
   validateDisplayOptions(displayOptions);
-  const dasAsset = await context.rpc.getAsset({assetId: asset, displayOptions: displayOptions});
+  const dasAsset = await context.rpc.getAsset({
+    assetId: asset,
+    displayOptions: displayOptions,
+  });
 
   return (
     await dasAssetsToCoreAssets(context, [dasAsset], options)
@@ -159,7 +164,10 @@ async function getCollection(
   displayOptions?: DisplayOptions
 ): Promise<CollectionResult> {
   validateDisplayOptions(displayOptions);
-  const dasCollection = await context.rpc.getAsset({assetId: collection, displayOptions: displayOptions});
+  const dasCollection = await context.rpc.getAsset({
+    assetId: collection,
+    displayOptions: displayOptions,
+  });
 
   return dasAssetToCoreCollection(context, dasCollection);
 }
@@ -168,7 +176,7 @@ function getCollectionsByUpdateAuthority(
   context: Umi,
   input: {
     updateAuthority: PublicKey;
-    displayOptions?: DisplayOptions
+    displayOptions?: DisplayOptions;
   } & Pagination &
     AssetOptions
 ) {

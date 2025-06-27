@@ -282,16 +282,25 @@ function dasExternalPluginsToCoreExternalPlugins(
               ? { address: publicKey(authorityAddress) }
               : {}),
           },
-          dataAuthority: adapterConfig.data_authority ? {
-            type: 'Address',
-            address: publicKey(adapterConfig.data_authority),
-          } : {
-            type: 'UpdateAuthority',
-          },
-          schema: adapterConfig.schema,
-          data: externalPlugin.data ? base64ToUInt8Array(externalPlugin.data) : undefined,
-          dataLen: externalPlugin.data_len != null ? BigInt(externalPlugin.data_len) : undefined,
-          dataOffset: externalPlugin.data_offset ? BigInt(externalPlugin.data_offset) : undefined,
+          dataAuthority: adapterConfig.data_authority
+            ? {
+                type: 'Address',
+                address: publicKey(adapterConfig.data_authority),
+              }
+            : {
+                type: 'UpdateAuthority',
+              },
+          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
+          data: externalPlugin.data
+            ? base64ToUInt8Array(externalPlugin.data)
+            : undefined,
+          dataLen:
+            externalPlugin.data_len != null
+              ? BigInt(externalPlugin.data_len)
+              : undefined,
+          dataOffset: externalPlugin.data_offset
+            ? BigInt(externalPlugin.data_offset)
+            : undefined,
           lifecycleChecks: externalPlugin.lifecycle_checks
             ? parseLifecycleChecks(externalPlugin.lifecycle_checks)
             : undefined,
@@ -299,8 +308,11 @@ function dasExternalPluginsToCoreExternalPlugins(
         });
       }
 
-      if (type === 'DataSection' && adapterConfig?.parent_key?.linked_app_data) {
-        // Create DataSection plugin  
+      if (
+        type === 'DataSection' &&
+        adapterConfig?.parent_key?.linked_app_data
+      ) {
+        // Create DataSection plugin
         if (!acc.dataSections) {
           acc.dataSections = [];
         }
@@ -313,23 +325,34 @@ function dasExternalPluginsToCoreExternalPlugins(
               ? { address: publicKey(authorityAddress) }
               : {}),
           },
-          dataAuthority: adapterConfig.parent_key.linked_app_data.address 
+          dataAuthority: adapterConfig.parent_key.linked_app_data.address
             ? {
                 type: 'Address',
-                address: publicKey(adapterConfig.parent_key.linked_app_data.address),
+                address: publicKey(
+                  adapterConfig.parent_key.linked_app_data.address
+                ),
               }
             : authority.type,
           parentKey: {
             type: 'LinkedAppData',
             dataAuthority: {
               type: 'Address',
-              address: publicKey(adapterConfig.parent_key.linked_app_data.address),
+              address: publicKey(
+                adapterConfig.parent_key.linked_app_data.address
+              ),
             },
           },
-          schema: adapterConfig.schema,
-          data: externalPlugin.data ? base64ToUInt8Array(externalPlugin.data) : undefined,
-          dataLen: externalPlugin.data_len != null ? BigInt(externalPlugin.data_len) : undefined,
-          dataOffset: externalPlugin.data_offset ? BigInt(externalPlugin.data_offset) : undefined,
+          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
+          data: externalPlugin.data
+            ? base64ToUInt8Array(externalPlugin.data)
+            : undefined,
+          dataLen:
+            externalPlugin.data_len != null
+              ? BigInt(externalPlugin.data_len)
+              : undefined,
+          dataOffset: externalPlugin.data_offset
+            ? BigInt(externalPlugin.data_offset)
+            : undefined,
           lifecycleChecks: externalPlugin.lifecycle_checks
             ? parseLifecycleChecks(externalPlugin.lifecycle_checks)
             : undefined,
@@ -351,14 +374,20 @@ function dasExternalPluginsToCoreExternalPlugins(
           },
           dataAuthority: {
             type: 'Address',
-            address: publicKey(adapterConfig.parent_key.linked_app_data.address),
+            address: publicKey(
+              adapterConfig.parent_key.linked_app_data.address
+            ),
           },
           schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
-          data: externalPlugin.data ? base64ToUInt8Array(externalPlugin.data) : undefined,
+          data: externalPlugin.data
+            ? base64ToUInt8Array(externalPlugin.data)
+            : undefined,
           lifecycleChecks: externalPlugin.lifecycle_checks
             ? parseLifecycleChecks(externalPlugin.lifecycle_checks)
             : undefined,
-          offset: externalPlugin.data_offset ? BigInt(externalPlugin.data_offset) : BigInt(offset),
+          offset: externalPlugin.data_offset
+            ? BigInt(externalPlugin.data_offset)
+            : BigInt(offset),
         });
       }
 

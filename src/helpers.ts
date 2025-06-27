@@ -288,9 +288,9 @@ function dasExternalPluginsToCoreExternalPlugins(
           } : {
             type: 'UpdateAuthority',
           },
-          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
+          schema: adapterConfig.schema,
           data: externalPlugin.data ? base64ToUInt8Array(externalPlugin.data) : undefined,
-          dataLen: externalPlugin.data_len ? BigInt(externalPlugin.data_len) : undefined,
+          dataLen: externalPlugin.data_len != null ? BigInt(externalPlugin.data_len) : undefined,
           dataOffset: externalPlugin.data_offset ? BigInt(externalPlugin.data_offset) : undefined,
           lifecycleChecks: externalPlugin.lifecycle_checks
             ? parseLifecycleChecks(externalPlugin.lifecycle_checks)
@@ -326,9 +326,9 @@ function dasExternalPluginsToCoreExternalPlugins(
               address: publicKey(adapterConfig.parent_key.linked_app_data.address),
             },
           },
-          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
+          schema: adapterConfig.schema,
           data: externalPlugin.data ? base64ToUInt8Array(externalPlugin.data) : undefined,
-          dataLen: externalPlugin.data_len ? BigInt(externalPlugin.data_len) : undefined,
+          dataLen: externalPlugin.data_len != null ? BigInt(externalPlugin.data_len) : undefined,
           dataOffset: externalPlugin.data_offset ? BigInt(externalPlugin.data_offset) : undefined,
           lifecycleChecks: externalPlugin.lifecycle_checks
             ? parseLifecycleChecks(externalPlugin.lifecycle_checks)

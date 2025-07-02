@@ -2,7 +2,6 @@ import { PublicKey, Umi } from '@metaplex-foundation/umi';
 import {
   DasApiAsset,
   DisplayOptions,
-  //    DisplayOptions,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {

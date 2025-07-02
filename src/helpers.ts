@@ -37,6 +37,7 @@ import {
   getExternalPluginAdapterSerializer,
   BaseExternalPluginAdapter,
   oracleFromBase,
+  ExternalPluginAdapterSchema,
 } from '@metaplex-foundation/mpl-core';
 import {
   AccountHeader,
@@ -49,6 +50,7 @@ import {
 } from '@metaplex-foundation/umi';
 import { MPL_CORE_COLLECTION } from './constants';
 import { AssetResult, CollectionResult } from './types';
+import { base64 } from '@metaplex-foundation/umi/serializers';
 
 function convertSnakeCase(str: string, toCase: 'pascal' | 'camel' = 'camel') {
   return str
@@ -62,8 +64,45 @@ function convertSnakeCase(str: string, toCase: 'pascal' | 'camel' = 'camel') {
     .join('');
 }
 
-function base64ToUInt8Array(base64: string) {
-  return Uint8Array.from(atob(base64), (m) => m.charCodeAt(0));
+function parsePluginData(data: any): Uint8Array | any {
+  if (!data) return new Uint8Array(0);
+
+  switch (true) {
+    case data instanceof Uint8Array:
+      return String.fromCharCode(...data);
+    case typeof data === 'string':
+      return base64.serialize(data);
+    case typeof data === 'object':
+      // Check if it's a binary data object (has numeric keys)
+      const keys = Object.keys(data);
+      if (keys.length > 0 && keys.every((key) => !isNaN(Number(key)))) {
+        // Convert binary data object to string
+        const bytes = Object.values(data).map(Number);
+        return String.fromCharCode(...bytes);
+      }
+      return data;
+    default:
+      return new Uint8Array(0);
+  }
+}
+
+function castSchemaToExternalPluginAdapterSchema(
+  schema: string
+): ExternalPluginAdapterSchema {
+  const schemaMap: Record<string, ExternalPluginAdapterSchema> = {
+    Binary: ExternalPluginAdapterSchema.Binary,
+    Json: ExternalPluginAdapterSchema.Json,
+    MsgPack: ExternalPluginAdapterSchema.MsgPack,
+  };
+
+  const enumValue = schemaMap[schema];
+  if (enumValue === undefined) {
+    throw new Error(
+      `Unknown schema type: ${schema}. Expected one of: ${Object.keys(schemaMap).join(', ')}`
+    );
+  }
+
+  return enumValue;
 }
 
 function getUpdateAuthority(
@@ -220,6 +259,35 @@ function parseLifecycleChecks(data: any): LifecycleChecks {
   );
 }
 
+function parseDataAuthority(dataAuthority: any): {
+  type: 'None' | 'Owner' | 'UpdateAuthority' | 'Address';
+  address?: PublicKey;
+} {
+  if (!dataAuthority) {
+    return { type: 'UpdateAuthority' };
+  }
+
+  if (typeof dataAuthority === 'string') {
+    return {
+      type: dataAuthority as 'None' | 'Owner' | 'UpdateAuthority' | 'Address',
+    };
+  }
+
+  if (dataAuthority.address) {
+    return {
+      type: (dataAuthority.type || 'Address') as 'Address',
+      address: publicKey(dataAuthority.address),
+    };
+  }
+
+  return {
+    type: (dataAuthority.type || 'UpdateAuthority') as
+      | 'None'
+      | 'Owner'
+      | 'UpdateAuthority',
+  };
+}
+
 function dasExternalPluginsToCoreExternalPlugins(
   externalPlugins: Record<string, any>[]
 ) {
@@ -290,10 +358,8 @@ function dasExternalPluginsToCoreExternalPlugins(
             : {
                 type: 'UpdateAuthority',
               },
-          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
-          data: externalPlugin.data
-            ? base64ToUInt8Array(externalPlugin.data)
-            : undefined,
+          schema: castSchemaToExternalPluginAdapterSchema(adapterConfig.schema),
+          data: parsePluginData(externalPlugin.data),
           dataLen:
             externalPlugin.data_len != null
               ? BigInt(externalPlugin.data_len)
@@ -317,6 +383,10 @@ function dasExternalPluginsToCoreExternalPlugins(
           acc.dataSections = [];
         }
 
+        const linkedAppDataAuthority = parseDataAuthority(
+          adapterConfig.parent_key?.linked_app_data
+        );
+
         acc.dataSections.push({
           type: 'DataSection',
           authority: {
@@ -325,27 +395,13 @@ function dasExternalPluginsToCoreExternalPlugins(
               ? { address: publicKey(authorityAddress) }
               : {}),
           },
-          dataAuthority: adapterConfig.parent_key.linked_app_data.address
-            ? {
-                type: 'Address',
-                address: publicKey(
-                  adapterConfig.parent_key.linked_app_data.address
-                ),
-              }
-            : authority.type,
+          dataAuthority: linkedAppDataAuthority,
           parentKey: {
             type: 'LinkedAppData',
-            dataAuthority: {
-              type: 'Address',
-              address: publicKey(
-                adapterConfig.parent_key.linked_app_data.address
-              ),
-            },
+            dataAuthority: linkedAppDataAuthority,
           },
-          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
-          data: externalPlugin.data
-            ? base64ToUInt8Array(externalPlugin.data)
-            : undefined,
+          schema: castSchemaToExternalPluginAdapterSchema(adapterConfig.schema),
+          data: parsePluginData(externalPlugin.data),
           dataLen:
             externalPlugin.data_len != null
               ? BigInt(externalPlugin.data_len)
@@ -372,15 +428,10 @@ function dasExternalPluginsToCoreExternalPlugins(
               ? { address: publicKey(authorityAddress) }
               : {}),
           },
-          dataAuthority: {
-            type: 'Address',
-            address: publicKey(
-              adapterConfig.parent_key.linked_app_data.address
-            ),
-          },
-          schema: adapterConfig.schema === 'Binary' ? 0 : adapterConfig.schema,
+          dataAuthority: linkedAppDataAuthority,
+          schema: castSchemaToExternalPluginAdapterSchema(adapterConfig.schema),
           data: externalPlugin.data
-            ? base64ToUInt8Array(externalPlugin.data)
+            ? parsePluginData(externalPlugin.data)
             : undefined,
           lifecycleChecks: externalPlugin.lifecycle_checks
             ? parseLifecycleChecks(externalPlugin.lifecycle_checks)
@@ -481,7 +532,7 @@ function handleUnknownPlugins(unknownDasPlugins?: Record<string, any>[]) {
     if (!PluginType[unknownPlugin.type]) return acc;
 
     const deserializedPlugin = getPluginSerializer().deserialize(
-      base64ToUInt8Array(unknownPlugin.data)
+      base64.serialize(unknownPlugin.data)
     )[0];
 
     const { authority } = unknownPlugin;
@@ -515,7 +566,7 @@ function handleUnknownExternalPlugins(
 
       const deserializedPlugin =
         getExternalPluginAdapterSerializer().deserialize(
-          base64ToUInt8Array(unknownPlugin.data)
+          base64.serialize(unknownPlugin.data)
         )[0];
 
       const {

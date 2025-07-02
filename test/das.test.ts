@@ -411,3 +411,129 @@ test.serial(
     });
   }
 );
+
+test.serial(
+  'das: it can convert DAS asset with MsgPack schema to MPL Core asset structure',
+  async (t) => {
+    // Given an Umi instance with DAS API and an asset with MsgPack schema
+    const umi = createUmiWithDas(DAS_API_ENDPOINT);
+    const assetPubKey = publicKey(
+      'EuXEcqHhF9jPxV9CKB5hjHC2TRo3xprdgk5vJTc9qRaY'
+    );
+
+    // Then the asset data parsed from DAS
+    const assetDas = await das.getAsset(umi, assetPubKey);
+    prepareAssetForComparison(assetDas, false);
+
+    // Then the asset data fetched via fetchAsset
+    const assetMplCore = await fetchAsset(umi, assetPubKey);
+    prepareAssetForComparison(assetMplCore);
+
+    // Verify that linkedAppDatas and dataSections have correct schema values
+    if (assetDas.linkedAppDatas && assetDas.linkedAppDatas.length > 0) {
+      const linkedAppData = assetDas.linkedAppDatas[0];
+      t.is(linkedAppData?.schema, 2, 'MsgPack schema should be 2');
+    }
+    if (assetDas.dataSections && assetDas.dataSections.length > 0) {
+      const dataSection = assetDas.dataSections[0];
+      t.is(dataSection?.schema, 2, 'MsgPack schema should be 2');
+    }
+
+    // Verify basic asset structure matches
+    t.is(assetDas.publicKey, assetMplCore.publicKey);
+    t.is(assetDas.name, assetMplCore.name);
+    t.is(assetDas.uri, assetMplCore.uri);
+  }
+);
+
+test.serial(
+  'das: it can convert DAS asset with Json schema to MPL Core asset structure',
+  async (t) => {
+    // Given an Umi instance with DAS API and an asset with Json schema
+    const umi = createUmiWithDas(DAS_API_ENDPOINT);
+    const assetPubKey = publicKey(
+      '9vqNxe6M6t7PYo1gXrY18hVgDvCpouHSZ6vdDEFbybeA'
+    );
+
+    // Then the asset data parsed from DAS
+    const assetDas = await das.getAsset(umi, assetPubKey);
+    prepareAssetForComparison(assetDas, false);
+
+    // Then the asset data fetched via fetchAsset
+    const assetMplCore = await fetchAsset(umi, assetPubKey);
+    prepareAssetForComparison(assetMplCore);
+
+    // Verify that linkedAppDatas has correct schema values
+    if (assetDas.linkedAppDatas && assetDas.linkedAppDatas.length > 0) {
+      const linkedAppData = assetDas.linkedAppDatas[0];
+      t.is(linkedAppData?.schema, 1, 'Json schema should be 1');
+      // Verify the data matches expected JSON format
+      t.deepEqual(
+        linkedAppData?.data,
+        { message: 'Hello', target: 'world' },
+        'LinkedAppData should have correct JSON data'
+      );
+    }
+    if (assetDas.dataSections && assetDas.dataSections.length > 0) {
+      const dataSection = assetDas.dataSections[0];
+      t.is(dataSection?.schema, 1, 'Json schema should be 1');
+      // Verify the data matches expected JSON format
+      t.deepEqual(
+        dataSection?.data,
+        { message: 'Hello', target: 'world' },
+        'DataSection should have correct JSON data'
+      );
+    }
+
+    // Verify basic asset structure matches
+    t.is(assetDas.publicKey, assetMplCore.publicKey);
+    t.is(assetDas.name, assetMplCore.name);
+    t.is(assetDas.uri, assetMplCore.uri);
+  }
+);
+
+test.serial(
+  'das: it can convert DAS asset with Binary schema to MPL Core asset structure',
+  async (t) => {
+    // Given an Umi instance with DAS API and an asset with Binary schema
+    const umi = createUmiWithDas(DAS_API_ENDPOINT);
+    const assetPubKey = publicKey(
+      'BVjK8uvqUuH5YU6ThX6A7gznx2xi8BxshawbuFe1Y5Vr'
+    );
+
+    // Then the asset data parsed from DAS
+    const assetDas = await das.getAsset(umi, assetPubKey);
+    prepareAssetForComparison(assetDas, false);
+
+    // Then the asset data fetched via fetchAsset
+    const assetMplCore = await fetchAsset(umi, assetPubKey);
+    prepareAssetForComparison(assetMplCore);
+
+    // Verify that linkedAppDatas and dataSections have correct schema values
+    if (assetDas.linkedAppDatas && assetDas.linkedAppDatas.length > 0) {
+      const linkedAppData = assetDas.linkedAppDatas[0];
+      t.is(linkedAppData?.schema, 0, 'Binary schema should be 0');
+      // Verify the data matches expected Binary format (Hello, world! as string)
+      t.deepEqual(
+        linkedAppData?.data,
+        assetMplCore.linkedAppDatas?.[0]?.data,
+        'LinkedAppData should have correct Binary data as string'
+      );
+    }
+    if (assetDas.dataSections && assetDas.dataSections.length > 0) {
+      const dataSection = assetDas.dataSections[0];
+      t.is(dataSection?.schema, 0, 'Binary schema should be 0');
+      // Verify the data matches expected Binary format (Hello, world! as string)
+      t.deepEqual(
+        dataSection?.data,
+        assetMplCore.dataSections?.[0]?.data,
+        'DataSection should have correct Binary data as string'
+      );
+    }
+
+    // Verify basic asset structure matches
+    t.is(assetDas.publicKey, assetMplCore.publicKey);
+    t.is(assetDas.name, assetMplCore.name);
+    t.is(assetDas.uri, assetMplCore.uri);
+  }
+);

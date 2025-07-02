@@ -23,7 +23,7 @@ export type DasExtra = {
     symbol: string;
     description: string;
     image: string;
-};
+  };
 };
 
 export type AssetResult = AssetV1 & DasExtra;

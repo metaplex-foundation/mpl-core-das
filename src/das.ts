@@ -22,10 +22,12 @@ function validateDisplayOptions(displayOptions?: DisplayOptions) {
   if (!displayOptions) return;
 
   const providedOptions = Object.keys(displayOptions);
-  
+
   // Since only 'showCollectionMetadata' is allowed, any other option is invalid
-  const invalidOptions = providedOptions.filter(opt => opt !== 'showCollectionMetadata');
-  
+  const invalidOptions = providedOptions.filter(
+    (opt) => opt !== 'showCollectionMetadata'
+  );
+
   if (invalidOptions.length > 0) {
     throw new Error(
       `The following display options are not supported with MPL Core: ${invalidOptions.join(', ')}. ` +
@@ -141,9 +143,10 @@ async function getAsset(
   displayOptions?: DisplayOptions
 ): Promise<AssetResult> {
   validateDisplayOptions(displayOptions);
+
   const dasAsset = await context.rpc.getAsset({
     assetId: asset,
-    displayOptions: displayOptions,
+    ...(displayOptions ? { displayOptions } : {}),
   });
 
   return (
@@ -163,9 +166,10 @@ async function getCollection(
   displayOptions?: DisplayOptions
 ): Promise<CollectionResult> {
   validateDisplayOptions(displayOptions);
+
   const dasCollection = await context.rpc.getAsset({
     assetId: collection,
-    displayOptions: displayOptions,
+    ...(displayOptions ? { displayOptions } : {}),
   });
 
   return dasAssetToCoreCollection(context, dasCollection);

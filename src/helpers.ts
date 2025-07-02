@@ -350,14 +350,7 @@ function dasExternalPluginsToCoreExternalPlugins(
               ? { address: publicKey(authorityAddress) }
               : {}),
           },
-          dataAuthority: adapterConfig.data_authority
-            ? {
-                type: 'Address',
-                address: publicKey(adapterConfig.data_authority),
-              }
-            : {
-                type: 'UpdateAuthority',
-              },
+          dataAuthority: parseDataAuthority(adapterConfig.data_authority),
           schema: castSchemaToExternalPluginAdapterSchema(adapterConfig.schema),
           data: parsePluginData(externalPlugin.data),
           dataLen:

@@ -64,7 +64,7 @@ function convertSnakeCase(str: string, toCase: 'pascal' | 'camel' = 'camel') {
     .join('');
 }
 
-function parsePluginData(data: any): Uint8Array | any {
+function parsePluginData(data: any): Uint8Array | string | Record<string, unknown> {
   if (!data) return new Uint8Array(0);
 
   switch (true) {

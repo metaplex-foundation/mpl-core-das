@@ -2,6 +2,7 @@ import { PublicKey, Umi } from '@metaplex-foundation/umi';
 import {
   DasApiAsset,
   DisplayOptions,
+  //    DisplayOptions,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
@@ -20,12 +21,11 @@ import { dasAssetToCoreAssetOrCollection } from './helpers';
 function validateDisplayOptions(displayOptions?: DisplayOptions) {
   if (!displayOptions) return;
 
-  const allowedOptions = ['showCollectionMetadata'];
   const providedOptions = Object.keys(displayOptions);
-
-  const invalidOptions = providedOptions.filter(
-    (opt) => !allowedOptions.includes(opt)
-  );
+  
+  // Since only 'showCollectionMetadata' is allowed, any other option is invalid
+  const invalidOptions = providedOptions.filter(opt => opt !== 'showCollectionMetadata');
+  
   if (invalidOptions.length > 0) {
     throw new Error(
       `The following display options are not supported with MPL Core: ${invalidOptions.join(', ')}. ` +

@@ -72,7 +72,7 @@ function parsePluginData(data: any): Uint8Array | any {
       return String.fromCharCode(...data);
     case typeof data === 'string':
       return base64.serialize(data);
-    case typeof data === 'object':
+    case typeof data === 'object': {
       // Check if it's a binary data object (has numeric keys)
       const keys = Object.keys(data);
       if (keys.length > 0 && keys.every((key) => !isNaN(Number(key)))) {
@@ -81,6 +81,7 @@ function parsePluginData(data: any): Uint8Array | any {
         return String.fromCharCode(...bytes);
       }
       return data;
+    }
     default:
       return new Uint8Array(0);
   }

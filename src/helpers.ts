@@ -48,9 +48,9 @@ import {
   publicKey,
   some,
 } from '@metaplex-foundation/umi';
+import { base64 } from '@metaplex-foundation/umi/serializers';
 import { MPL_CORE_COLLECTION } from './constants';
 import { AssetResult, CollectionResult } from './types';
-import { base64 } from '@metaplex-foundation/umi/serializers';
 
 function convertSnakeCase(str: string, toCase: 'pascal' | 'camel' = 'camel') {
   return str
@@ -77,7 +77,7 @@ function parsePluginData(
     case typeof data === 'object': {
       // Check if it's a binary data object (has numeric keys)
       const keys = Object.keys(data);
-      if (keys.length > 0 && keys.every((key) => !isNaN(Number(key)))) {
+      if (keys.length > 0 && keys.every((key) => !Number.isNaN(Number(key)))) {
         // Convert binary data object to string
         const bytes = Object.values(data).map(Number);
         return String.fromCharCode(...bytes);

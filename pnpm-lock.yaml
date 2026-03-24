@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@metaplex-foundation/mpl-core':
-    specifier: '>=1.4.0'
-    version: 1.4.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.4.0)
+    specifier: '>=1.8.0'
+    version: 1.8.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.4.0)
 
 devDependencies:
   '@ava/typescript':
@@ -179,10 +179,10 @@ packages:
       '@metaplex-foundation/umi': 1.2.0
     dev: true
 
-  /@metaplex-foundation/mpl-core@1.4.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.4.0):
-    resolution: {integrity: sha512-XRvodR0KJokqcfw+wZjpar3lb6Rmf/8eAUpM4QFpSQTCanexdsrLd/Ol1zfPZ2VDYOgUh641LUHxcnGx0zvLUA==}
+  /@metaplex-foundation/mpl-core@1.8.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.4.0):
+    resolution: {integrity: sha512-QwJYzApk2Q5se3oe1LVmApM3wHQ3KoFZl3/ePiRPnqj+z/F4nzkF6jftEsGYZ57xPXYOmSkePayNiFeRhnzaFw==}
     peerDependencies:
-      '@metaplex-foundation/umi': '>=0.8.2 <= 1.0'
+      '@metaplex-foundation/umi': '>=0.8.2 <2.0.0'
       '@noble/hashes': ^1.3.1
     dependencies:
       '@metaplex-foundation/umi': 1.2.0

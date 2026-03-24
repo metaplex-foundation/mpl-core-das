@@ -526,6 +526,7 @@ function handleUnknownPlugins(unknownDasPlugins?: Record<string, any>[]) {
 
   return unknownDasPlugins.reduce((acc: PluginsList, unknownPlugin) => {
     if (!PluginType[unknownPlugin.type]) return acc;
+    if (unknownPlugin.data == null) return acc;
 
     const deserializedPlugin = getPluginSerializer().deserialize(
       base64.serialize(unknownPlugin.data)
@@ -559,6 +560,7 @@ function handleUnknownExternalPlugins(
   return unknownDasPlugins.reduce(
     (acc: ExternalPluginAdaptersList, unknownPlugin) => {
       if (!ExternalPluginAdapterType[unknownPlugin.type]) return acc;
+      if (unknownPlugin.data == null) return acc;
 
       const deserializedPlugin =
         getExternalPluginAdapterSerializer().deserialize(

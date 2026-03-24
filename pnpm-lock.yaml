@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@metaplex-foundation/mpl-core':
-    specifier: ^1.8.0
+    specifier: '>=1.8.0'
     version: 1.8.0(@metaplex-foundation/umi@1.2.0)(@noble/hashes@1.4.0)
 
 devDependencies:

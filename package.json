@@ -60,5 +60,5 @@
       "dotenv/config"
     ]
   },
-  "packageManager": "pnpm@8.2.0"
+  "packageManager": "pnpm@10.20.0"
 }

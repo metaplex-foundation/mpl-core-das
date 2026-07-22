@@ -2,7 +2,7 @@
   "name": "@metaplex-foundation/mpl-core-das",
   "description": "DAS helpers for MPL Core",
   "license": "Apache-2.0",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "homepage": "https://metaplex.com",
   "repository": "",
@@ -12,6 +12,7 @@
     "build": "rimraf dist && tsc -p tsconfig.json",
     "build:docs": "typedoc --entryPointStrategy expand ./src",
     "test": "ava --timeout 600s",
+    "test:unit": "ava dist/test/unit.test.js",
     "lint": "eslint --ext js,ts,tsx src",
     "lint:fix": "eslint --fix --ext js,ts,tsx src",
     "format": "prettier --check src test",
@@ -25,13 +26,14 @@
     "registry": "https://registry.npmjs.org"
   },
   "peerDependencies": {
-    "@metaplex-foundation/digital-asset-standard-api": ">=2.0.0",
-    "@metaplex-foundation/mpl-core": ">=1.8.0",
+    "@metaplex-foundation/digital-asset-standard-api": ">=2.1.0",
+    "@metaplex-foundation/mpl-core": ">=1.9.0",
     "@metaplex-foundation/umi": ">=1.2.0"
   },
   "devDependencies": {
     "@ava/typescript": "^4.1.0",
-    "@metaplex-foundation/digital-asset-standard-api": "^2.0.0",
+    "@metaplex-foundation/digital-asset-standard-api": "^2.1.0",
+    "@metaplex-foundation/mpl-core": "^1.9.0",
     "@metaplex-foundation/umi": "^1.2.0",
     "@metaplex-foundation/umi-bundle-tests": "^1.2.0",
     "@types/node": "^25.5.0",

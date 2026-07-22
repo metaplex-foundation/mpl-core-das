@@ -1,6 +1,8 @@
 # JavaScript client with DAS helpers for Mpl Core
 
-A JavaScript library for getting assets and collections from DAS in the Mpl Core format.
+A JavaScript library for getting assets, collections, and groups from DAS in the Mpl Core format.
+
+Requires `@metaplex-foundation/digital-asset-standard-api` `>=2.1.0` (core groups, `getGrouping`, agent filters).
 
 ## Getting started
 
@@ -9,11 +11,11 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
     ```sh
    npm install @metaplex-foundation/digital-asset-standard-api
    ```
-3. Install this library.
+3. Install this library (requires `@metaplex-foundation/mpl-core` `>=1.9.0`).
     ```sh
-   npm install @metaplex-foundation/mpl-core-das
+   npm install @metaplex-foundation/mpl-core-das @metaplex-foundation/mpl-core
    ```
-4. Finally, register the library with your Umi instance.
+4. Finally, register the DAS plugin with your Umi instance.
    ```ts
    import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
    import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
@@ -36,6 +38,11 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
    const foundCollections = await das.searchCollections(umi, {
      authority: publicKey('<authorityPublicKey>'),
    });
+
+   // Search groups
+   const foundGroups = await das.searchGroups(umi, {
+     authority: publicKey('<authorityPublicKey>'),
+   });
    
    // Fetch assets by authority
    const assetsByAuthority = await das.getAssetsByAuthority(umi, {
@@ -51,12 +58,62 @@ A JavaScript library for getting assets and collections from DAS in the Mpl Core
    const assetsByCollection = await das.getAssetsByCollection(umi, {
      collection: publicKey('<collectionPublicKey>'),
    });
+
+   // Fetch members of an mpl-core GroupV1
+   const assetsByGroup = await das.getAssetsByGroup(umi, {
+     group: publicKey('<groupPublicKey>'),
+   });
+
+   // Grouping metadata (name + size) without listing members
+   const grouping = await das.getGrouping(umi, {
+     groupKey: 'group',
+     groupValue: publicKey('<groupPublicKey>'),
+   });
    
    // Fetch collections by authority
    const collectionsByUpdateAuthority = await das.getCollectionsByUpdateAuthority(umi, {
      updateAuthority: publicKey('<updateAuthorityPublicKey>'),
-   }); 
+   });
+
+   // Fetch groups by authority
+   const groupsByUpdateAuthority = await das.getGroupsByUpdateAuthority(umi, {
+     updateAuthority: publicKey('<updateAuthorityPublicKey>'),
+   });
+
+   // Discover registered agents via DAS agent filters
+   const agents = await das.searchAssets(umi, {
+     isAgent: true,
+     skipDerivePlugins: true,
+   });
    ```
+
+## Core groups
+
+mpl-core `GroupV1` accounts are indexed by DAS with `groupKey: 'group'` (collections use `groupKey: 'collection'`).
+
+| Helper | What it does |
+|--------|----------------|
+| `das.getAssetsByGroup` | List members (assets, collections, nested groups) |
+| `das.getGrouping` | Summary metadata (`group_name`, `group_size`) |
+| `das.getGroup` / `das.searchGroups` | Fetch group account(s) as `GroupResult` |
+
+> Membership vectors on `GroupResult` (`collections`, `groups`, `parentGroups`, `assets`) may be empty depending on the indexer. Use `fetchGroupV1` from `@metaplex-foundation/mpl-core` for authoritative on-chain membership.
+
+## Agent filters
+
+`das.searchAssets` forwards DAS agent filters from `@metaplex-foundation/digital-asset-standard-api`:
+
+```ts
+const agents = await das.searchAssets(umi, {
+  isAgent: true,
+  agentToken: publicKey('<genesisMint>'),
+  assetSigner: publicKey('<assetSignerPda>'),
+  skipDerivePlugins: true,
+});
+
+// Mapped onto each AssetResult when present:
+// asset.is_agent, asset.agent_token, asset.asset_signer
+```
 
 ## Plugin Derivations
 

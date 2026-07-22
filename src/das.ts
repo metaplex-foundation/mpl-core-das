@@ -1,22 +1,36 @@
-import { PublicKey, Umi } from '@metaplex-foundation/umi';
+import { PublicKey, RpcInterface, Umi } from '@metaplex-foundation/umi';
 import {
   DasApiAsset,
+  DasApiInterface,
   DisplayOptions,
-  //    DisplayOptions,
+  GetGroupingRpcResponse,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
   AssetV1,
+  Key,
   deriveAssetPluginsWithFetch,
 } from '@metaplex-foundation/mpl-core';
-import { MPL_CORE_ASSET, MPL_CORE_COLLECTION } from './constants';
+import {
+  MPL_CORE_ASSET,
+  MPL_CORE_COLLECTION,
+  MPL_CORE_GROUP,
+} from './constants';
 import {
   AssetOptions,
   AssetResult,
   CollectionResult,
+  CoreInterface,
+  CoreResult,
+  GroupResult,
   Pagination,
 } from './types';
 import { dasAssetToCoreAssetOrCollection } from './helpers';
+
+/** Avoid relying on DAS module augmentation across duplicate umi installs. */
+function dasRpc(context: Umi): RpcInterface & DasApiInterface {
+  return context.rpc as RpcInterface & DasApiInterface;
+}
 
 function validateDisplayOptions(displayOptions?: DisplayOptions) {
   if (!displayOptions) return;
@@ -36,27 +50,42 @@ function validateDisplayOptions(displayOptions?: DisplayOptions) {
   }
 }
 
+type SearchAssetsBaseInput = Omit<SearchAssetsRpcInput, 'interface' | 'burnt'> &
+  AssetOptions;
+
 async function searchAssets(
   context: Umi,
-  input: Omit<SearchAssetsRpcInput, 'interface' | 'burnt'> & {
+  input: SearchAssetsBaseInput & {
     interface?: typeof MPL_CORE_ASSET;
-  } & AssetOptions
+  }
 ): Promise<AssetResult[]>;
 async function searchAssets(
   context: Umi,
-  input: Omit<SearchAssetsRpcInput, 'interface' | 'burnt'> & {
+  input: SearchAssetsBaseInput & {
     interface?: typeof MPL_CORE_COLLECTION;
-  } & AssetOptions
+  }
 ): Promise<CollectionResult[]>;
 async function searchAssets(
   context: Umi,
-  input: Omit<SearchAssetsRpcInput, 'interface' | 'burnt'> & {
-    interface?: typeof MPL_CORE_ASSET | typeof MPL_CORE_COLLECTION;
-  } & AssetOptions
+  input: SearchAssetsBaseInput & {
+    interface?: typeof MPL_CORE_GROUP;
+  }
+): Promise<GroupResult[]>;
+async function searchAssets(
+  context: Umi,
+  input: SearchAssetsBaseInput & {
+    interface?: CoreInterface;
+  }
+): Promise<CoreResult[]>;
+async function searchAssets(
+  context: Umi,
+  input: SearchAssetsBaseInput & {
+    interface?: CoreInterface;
+  }
 ) {
   validateDisplayOptions(input.displayOptions);
 
-  const dasAssets = await context.rpc.searchAssets({
+  const dasAssets = await dasRpc(context).searchAssets({
     ...input,
     interface: input.interface ?? MPL_CORE_ASSET,
     burnt: false,
@@ -67,18 +96,23 @@ async function searchAssets(
     dasAssetToCoreAssetOrCollection(dasAsset)
   );
 
-  if (input.interface === MPL_CORE_COLLECTION || input.skipDerivePlugins) {
+  if (
+    input.interface === MPL_CORE_COLLECTION ||
+    input.interface === MPL_CORE_GROUP ||
+    input.skipDerivePlugins
+  ) {
     return mappedAssets;
   }
 
   return deriveAssetPluginsWithFetch(context, mappedAssets as AssetV1[]);
 }
 
-function searchCollections(
-  context: Umi,
-  input: Omit<SearchAssetsRpcInput, 'interface' | 'burnt'> & AssetOptions
-) {
+function searchCollections(context: Umi, input: SearchAssetsBaseInput) {
   return searchAssets(context, { ...input, interface: MPL_CORE_COLLECTION });
+}
+
+function searchGroups(context: Umi, input: SearchAssetsBaseInput) {
+  return searchAssets(context, { ...input, interface: MPL_CORE_GROUP });
 }
 
 function getAssetsByOwner(
@@ -130,11 +164,78 @@ function getAssetsByCollection(
 }
 
 /**
+ * List Core assets / collections / nested groups that belong to an mpl-core GroupV1.
+ * Uses the base DAS `getAssetsByGroup` method with `groupKey: 'group'`.
+ */
+async function getAssetsByGroup(
+  context: Umi,
+  input: {
+    group: PublicKey;
+    displayOptions?: DisplayOptions;
+  } & Pagination &
+    AssetOptions
+): Promise<CoreResult[]> {
+  validateDisplayOptions(input.displayOptions);
+
+  const dasAssets = await dasRpc(context).getAssetsByGroup({
+    groupKey: 'group',
+    groupValue: input.group,
+    sortBy: input.sortBy,
+    limit: input.limit,
+    page: input.page,
+    before: input.before,
+    after: input.after,
+    cursor: input.cursor,
+    displayOptions: input.displayOptions,
+  });
+
+  const mapped = dasAssets.items.map((dasAsset) =>
+    dasAssetToCoreAssetOrCollection(dasAsset)
+  );
+
+  if (input.skipDerivePlugins) {
+    return mapped;
+  }
+
+  const assets = mapped.filter(
+    (item): item is AssetResult => item.key === Key.AssetV1
+  );
+  if (assets.length === 0) {
+    return mapped;
+  }
+
+  const derivedAssets = (await deriveAssetPluginsWithFetch(
+    context,
+    assets
+  )) as AssetResult[];
+  const derivedByKey = new Map(
+    derivedAssets.map((asset) => [asset.publicKey.toString(), asset])
+  );
+
+  return mapped.map((item) => {
+    if (item.key !== Key.AssetV1) return item;
+    return derivedByKey.get(item.publicKey.toString()) ?? item;
+  });
+}
+
+/**
+ * Return DAS grouping metadata (name + size) for a collection or mpl-core group.
+ */
+function getGrouping(
+  context: Umi,
+  input: {
+    groupKey: 'collection' | 'group';
+    groupValue: PublicKey | string;
+  }
+): Promise<GetGroupingRpcResponse> {
+  return dasRpc(context).getGrouping({
+    groupKey: input.groupKey,
+    groupValue: input.groupValue.toString(),
+  });
+}
+
+/**
  * Convenience function to fetch a single asset by pubkey
- * @param context Umi
- * @param asset pubkey of the asset
- * @param options
- * @returns
  */
 async function getAsset(
   context: Umi,
@@ -144,7 +245,7 @@ async function getAsset(
 ): Promise<AssetResult> {
   validateDisplayOptions(displayOptions);
 
-  const dasAsset = await context.rpc.getAsset({
+  const dasAsset = await dasRpc(context).getAsset({
     assetId: asset,
     ...(displayOptions ? { displayOptions } : {}),
   });
@@ -156,9 +257,6 @@ async function getAsset(
 
 /**
  * Convenience function to fetch a single collection by pubkey
- * @param context
- * @param collection
- * @returns
  */
 async function getCollection(
   context: Umi,
@@ -167,12 +265,32 @@ async function getCollection(
 ): Promise<CollectionResult> {
   validateDisplayOptions(displayOptions);
 
-  const dasCollection = await context.rpc.getAsset({
+  const dasCollection = await dasRpc(context).getAsset({
     assetId: collection,
     ...(displayOptions ? { displayOptions } : {}),
   });
 
-  return dasAssetToCoreCollection(context, dasCollection);
+  return dasAssetToCoreCollection(dasCollection);
+}
+
+/**
+ * Convenience function to fetch a single mpl-core GroupV1 by pubkey via DAS.
+ * Membership vectors may be empty depending on the indexer — use `fetchGroupV1`
+ * from `@metaplex-foundation/mpl-core` for authoritative on-chain membership.
+ */
+async function getGroup(
+  context: Umi,
+  group: PublicKey,
+  displayOptions?: DisplayOptions
+): Promise<GroupResult> {
+  validateDisplayOptions(displayOptions);
+
+  const dasGroup = await dasRpc(context).getAsset({
+    assetId: group,
+    ...(displayOptions ? { displayOptions } : {}),
+  });
+
+  return dasAssetToCoreGroup(dasGroup);
 }
 
 function getCollectionsByUpdateAuthority(
@@ -191,10 +309,26 @@ function getCollectionsByUpdateAuthority(
   });
 }
 
+function getGroupsByUpdateAuthority(
+  context: Umi,
+  input: {
+    updateAuthority: PublicKey;
+    displayOptions?: DisplayOptions;
+  } & Pagination &
+    AssetOptions
+) {
+  validateDisplayOptions(input.displayOptions);
+  return searchGroups(context, {
+    ...input,
+    authority: input.updateAuthority,
+    displayOptions: input.displayOptions,
+  });
+}
+
 async function dasAssetsToCoreAssets(
   context: Umi,
   assets: DasApiAsset[],
-  options: AssetOptions
+  options: AssetOptions = {}
 ): Promise<AssetResult[]> {
   const coreAssets = assets.map((asset) => {
     if (asset.interface !== MPL_CORE_ASSET) {
@@ -214,10 +348,7 @@ async function dasAssetsToCoreAssets(
   >;
 }
 
-async function dasAssetToCoreCollection(
-  context: Umi,
-  asset: DasApiAsset & AssetOptions
-): Promise<CollectionResult> {
+function dasAssetToCoreCollection(asset: DasApiAsset): CollectionResult {
   if (asset.interface !== MPL_CORE_COLLECTION) {
     throw new Error(
       `Invalid interface, expecting interface to be ${MPL_CORE_COLLECTION} but got ${asset.interface}`
@@ -226,15 +357,30 @@ async function dasAssetToCoreCollection(
   return dasAssetToCoreAssetOrCollection(asset) as CollectionResult;
 }
 
+function dasAssetToCoreGroup(asset: DasApiAsset): GroupResult {
+  if (asset.interface !== MPL_CORE_GROUP) {
+    throw new Error(
+      `Invalid interface, expecting interface to be ${MPL_CORE_GROUP} but got ${asset.interface}`
+    );
+  }
+  return dasAssetToCoreAssetOrCollection(asset) as GroupResult;
+}
+
 export const das = {
   searchAssets,
   searchCollections,
+  searchGroups,
   getAssetsByOwner,
   getAssetsByAuthority,
   getAssetsByCollection,
+  getAssetsByGroup,
   getCollectionsByUpdateAuthority,
+  getGroupsByUpdateAuthority,
+  getGrouping,
   getAsset,
   getCollection,
+  getGroup,
   dasAssetsToCoreAssets,
   dasAssetToCoreCollection,
+  dasAssetToCoreGroup,
 } as const;

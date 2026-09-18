@@ -5,7 +5,9 @@
 # Clients.
 js_client: &js_client
   - ".github/workflows/main.yml"
-  - ".github/test-js-client.yml"
+  - ".github/workflows/test-js-client.yml"
   - ".github/file-filters.yml"
   - ".github/.env"
-  - "/**"
+  # dorny/paths-filter patterns are relative; a leading-slash "/**" matches
+  # nothing, which silently skipped the JS test job on every PR.
+  - "**"

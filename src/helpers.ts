@@ -2,7 +2,6 @@ import {
   DasApiAsset,
   DasApiAssetAuthority,
   DasApiAssetGrouping,
-  DasApiAssetInterface,
 } from '@metaplex-foundation/digital-asset-standard-api';
 import {
   AddBlocker,
@@ -49,8 +48,8 @@ import {
   some,
 } from '@metaplex-foundation/umi';
 import { base64 } from '@metaplex-foundation/umi/serializers';
-import { MPL_CORE_COLLECTION } from './constants';
-import { AssetResult, CollectionResult } from './types';
+import { MPL_CORE_COLLECTION, MPL_CORE_GROUP } from './constants';
+import { CoreResult, GroupResult } from './types';
 
 function convertSnakeCase(str: string, toCase: 'pascal' | 'camel' = 'camel') {
   return str
@@ -116,7 +115,11 @@ function getUpdateAuthority(
     updateAuthority: { type: 'None' },
   };
 
-  if (groupingItem && groupingItem.group_key === 'collection') {
+  if (
+    groupingItem &&
+    groupingItem.group_key === 'collection' &&
+    groupingItem.group_value
+  ) {
     result.updateAuthority = {
       type: 'Collection',
       address: publicKey(groupingItem.group_value),
@@ -606,7 +609,7 @@ function handleUnknownExternalPlugins(
 
 export function dasAssetToCoreAssetOrCollection(
   dasAsset: DasApiAsset
-): AssetResult | CollectionResult {
+): CoreResult {
   const {
     interface: assetInterface,
     id,
@@ -623,6 +626,9 @@ export function dasAssetToCoreAssetOrCollection(
     mpl_core_info: mplCoreInfo,
     external_plugins: externalPlugins,
     unknown_external_plugins: unknownExternalPlugins,
+    is_agent: isAgent,
+    agent_token: agentToken,
+    asset_signer: assetSigner,
   } = dasAsset as DasApiAsset & {
     executable?: boolean;
     lamports?: number;
@@ -637,6 +643,9 @@ export function dasAssetToCoreAssetOrCollection(
     name: content.metadata.name,
     content,
     collection_metadata: grouping[0]?.collection_metadata,
+    ...(isAgent !== undefined ? { is_agent: isAgent } : {}),
+    ...(agentToken !== undefined ? { agent_token: agentToken } : {}),
+    ...(assetSigner !== undefined ? { asset_signer: assetSigner } : {}),
     ...getAccountHeader(executable, lamps, rentEpoch),
     ...(plugins ? dasPluginsToCorePlugins(plugins) : {}),
     ...(externalPlugins !== undefined
@@ -647,9 +656,7 @@ export function dasAssetToCoreAssetOrCollection(
     // pluginHeader: // TODO: Reconstruct
   };
 
-  const isCollection =
-    assetInterface === (MPL_CORE_COLLECTION as DasApiAssetInterface);
-  if (isCollection) {
+  if (assetInterface === MPL_CORE_COLLECTION) {
     return {
       ...commonFields,
       key: Key.CollectionV1,
@@ -658,6 +665,20 @@ export function dasAssetToCoreAssetOrCollection(
       numMinted,
       currentSize,
     };
+  }
+
+  if (assetInterface === MPL_CORE_GROUP) {
+    return {
+      ...commonFields,
+      key: Key.GroupV1,
+      // Authority should be always present!
+      updateAuthority: authorities[0]!.address,
+      // Membership vectors are often absent from DAS — use fetchGroupV1 for full state.
+      collections: [],
+      groups: [],
+      parentGroups: [],
+      assets: [],
+    } as GroupResult;
   }
 
   return {

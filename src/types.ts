@@ -2,11 +2,7 @@ import {
   DasApiAssetContent,
   SearchAssetsRpcInput,
 } from '@metaplex-foundation/digital-asset-standard-api';
-import {
-  AssetV1,
-  CollectionV1,
-  GroupV1,
-} from '@metaplex-foundation/mpl-core';
+import { AssetV1, CollectionV1, GroupV1 } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@metaplex-foundation/umi';
 import {
   MPL_CORE_ASSET,

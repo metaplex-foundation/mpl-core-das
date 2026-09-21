@@ -5,7 +5,10 @@
   "version": "0.1.9",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "homepage": "https://metaplex.com",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metaplex-foundation/mpl-core-das.git"
+  },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
